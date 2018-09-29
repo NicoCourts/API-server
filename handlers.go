@@ -23,7 +23,7 @@ func PostIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(posts); err != nil {
+	if err := json.NewEncoder(w).Encode(RepoGetVisiblePosts()); err != nil {
 		panic(err)
 	}
 }
@@ -53,6 +53,8 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input Input
+
+	// Don't allow people to flood our API with data
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1000000))
 
 	if err != nil {
