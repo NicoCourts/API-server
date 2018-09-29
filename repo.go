@@ -30,7 +30,7 @@ func RepoCreatePost(post Post) Post {
 	c := <-ch1
 
 	// Do the thing
-	id := GetNextID(post.URLTitle, post.Date)
+	id := getNextID(post.URLTitle, post.Date)
 	post.ID = id
 
 	err := c.Insert(post)
@@ -41,8 +41,8 @@ func RepoCreatePost(post Post) Post {
 	return post
 }
 
-// GetNextID returns the ID for a post added at this moment.
-func GetNextID(title string, date time.Time) uint32 {
+// getNextID returns the ID for a post added at this moment.
+func getNextID(title string, date time.Time) uint32 {
 	// hash the (url-safe) title and the time together using a fast hash
 	h := xxhash.New32()
 	h.Write([]byte(title))
