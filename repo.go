@@ -20,13 +20,16 @@ var posts Posts
 
 // RepoCreatePost adds a new post to our data store.
 func RepoCreatePost(post Post) Post {
-	// Open a database connection
+	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
 	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
 	mux.Lock()
 	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
 	go databaseHelper(ch1, &mux)
-	// Catch the incoming pointer
 	c := <-ch1
 
 	// Do the thing
@@ -54,13 +57,16 @@ func getNextID(title string, date time.Time) uint32 {
 // RepoGetPost returns the post for the given ID (if one exists). If
 //	not, return a blank post.
 func RepoGetPost(urltitle string) Post {
-	// Open a database connection
+	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
 	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
 	mux.Lock()
 	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
 	go databaseHelper(ch1, &mux)
-	// Catch the incoming pointer
 	c := <-ch1
 
 	var post Post
@@ -74,13 +80,16 @@ func RepoGetPost(urltitle string) Post {
 
 // RepoDestroyPost deletes (disables, actually) a post.
 func RepoDestroyPost(urltitle string) error {
-	// Open a database connection
+	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
 	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
 	mux.Lock()
 	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
 	go databaseHelper(ch1, &mux)
-	// Catch the incoming pointer
 	c := <-ch1
 
 	// Find post, if it exists
@@ -104,13 +113,16 @@ func RepoDestroyPost(urltitle string) error {
 
 // RepoGetVisiblePosts returns a list of all visible posts (publc)
 func RepoGetVisiblePosts() Posts {
-	// Open a database connection
+	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
 	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
 	mux.Lock()
 	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
 	go databaseHelper(ch1, &mux)
-	// Catch the incoming pointer
 	c := <-ch1
 
 	var posts Posts
