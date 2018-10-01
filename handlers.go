@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -46,13 +49,7 @@ func PostShow(w http.ResponseWriter, r *http.Request) {
 //	the form {"title":"t", "body":"b", "isshort":T/F} where t and b are
 //	treated as html that has been escaped via html.EscapeString().
 func PostCreate(w http.ResponseWriter, r *http.Request) {
-	type Input struct {
-		Title   string `json:"title"`
-		Body    string `json:"body"`
-		IsShort bool   `json:"isshort"`
-	}
-
-	var input Input
+	var input SignedInput
 
 	// Don't allow people to flood our API with data
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1000000))
@@ -68,24 +65,48 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.Unmarshal(body, &input); err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
+
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
 		}
+		return
 	}
 
+	// Verify signature
+	var in []byte
+	in = append(in, []byte(input.In.Title)...)
+	in = append(in, []byte(input.In.Body)...)
+	if !Verify(in, input.Nnce, input.Sig) {
+		w.WriteHeader(http.StatusUnauthorized)
+		log.Print("Unauthorized Access Attempt")
+		return
+	}
+
+	// Make the URLTitle
+	urlTitle := strings.Replace(strings.ToLower(input.In.Title), " ", "-", -1)
+	re := regexp.MustCompile("[^a-zA-Z0-9-]+")
+	urlTitle = re.ReplaceAllString(urlTitle, "")
+	if len(urlTitle) > 35 {
+		urlTitle = urlTitle[:35]
+	}
+
+	// We've confirmed authenticity at this point. Prepare post for insertion.
 	post := Post{
-		Title:   input.Title,
-		Body:    input.Body,
-		IsShort: input.IsShort,
-		Visible: true,
-		Date:    time.Now(),
+		Title:    input.In.Title,
+		URLTitle: urlTitle,
+		Body:     input.In.Body,
+		IsShort:  input.In.IsShort,
+		Visible:  true,
+		Date:     time.Now(),
 	}
 
 	p := RepoCreatePost(post)
-	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(p); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		panic(err)
 	}
+
+	w.WriteHeader(http.StatusCreated)
 }
 
 // PostDelete deletes the post with the given ID
@@ -101,4 +122,29 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusAccepted)
 
+}
+
+// ReadNonce prints out the current nonce to use for authentication
+func ReadNonce(w http.ResponseWriter, r *http.Request) {
+	// Responsibly declare our content type and return code
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(CurrentNonce()); err != nil {
+		panic(err)
+	}
+}
+
+// NonceUpdate just churns the nonce. This is useful if the client
+//	notices the nonce is near expiring and would rather not risk it.
+//	Since generating pseudorandom noise can be expensive, require
+//	nonce to be at least 10 minutes old to prevent DDOS attacks.
+func NonceUpdate(w http.ResponseWriter, r *http.Request) {
+	if NonceIsOlderThan(10 * time.Minute) {
+		UpdateNonce()
+		w.WriteHeader(http.StatusAccepted)
+	} else {
+		// Sorry, chum
+		w.WriteHeader(http.StatusForbidden)
+	}
 }
