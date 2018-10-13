@@ -1,4 +1,4 @@
-/* repo.go provides an interface for a data repo.
+/*repo.go provides an interface for a data repo.
  *		At the moment this will hold some dummy data while the rest of
  *		the server is developed.
  */
@@ -16,7 +16,6 @@ import (
 )
 
 var currentID int
-var posts Posts
 
 // RepoCreatePost adds a new post to our data store.
 func RepoCreatePost(post Post) Post {
@@ -127,6 +126,29 @@ func RepoGetVisiblePosts() Posts {
 
 	var posts Posts
 	err := c.Find(bson.M{"visible": true}).All(&posts)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return posts
+}
+
+// RepoGetAllPosts returns a list of all visible posts (publc)
+func RepoGetAllPosts() Posts {
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux)
+	c := <-ch1
+
+	var posts Posts
+	err := c.Find(bson.M{}).All(&posts)
 	if err != nil {
 		log.Fatal(err)
 	}

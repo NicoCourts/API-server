@@ -31,6 +31,18 @@ func PostIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// AllPostIndex returns a JSON list of all posts (including invisible ones)
+func AllPostIndex(w http.ResponseWriter, r *http.Request) {
+
+	// Responsibly declare our content type and return code
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(RepoGetVisiblePosts()); err != nil {
+		panic(err)
+	}
+}
+
 // PostShow returns the details of a specific post
 func PostShow(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

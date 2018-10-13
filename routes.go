@@ -30,6 +30,12 @@ var routes = Routes{
 		PostIndex,
 	},
 	Route{
+		"ListAllPosts",
+		"GET",
+		"/posts/all/",
+		AllPostIndex,
+	},
+	Route{
 		"PostShow",
 		"GET",
 		"/post/{postID}",
