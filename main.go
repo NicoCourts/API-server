@@ -3,9 +3,12 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"google.golang.org/appengine"
 )
 
 func main() {
+	appengine.Main()
 
 	router := NewRouter()
 

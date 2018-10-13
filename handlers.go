@@ -84,7 +84,7 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify signature
+	// Verify nonce and signature
 	var in []byte
 	in = append(in, []byte(input.In.Title)...)
 	in = append(in, []byte(input.In.Body)...)
