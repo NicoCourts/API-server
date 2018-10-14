@@ -5,17 +5,31 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sync"
 	"time"
 
+	"cloud.google.com/go/datastore"
 	"github.com/OneOfOne/xxhash"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 var currentID int
+var dsClient *datastore.Client
+
+func init() {
+	ctx := context.Background()
+
+	client, err := datastore.NewClient(ctx, "posts")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dsClient = client
+}
 
 // RepoCreatePost adds a new post to our data store.
 func RepoCreatePost(post Post) Post {
