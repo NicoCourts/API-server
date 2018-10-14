@@ -10,10 +10,9 @@ import (
 )
 
 func main() {
-	appengine.Main()
-
 	router := NewRouter()
 
 	//log.Fatal(http.ListenAndServe(":80", router))
 	http.Handle("/", handlers.CombinedLoggingHandler(os.Stderr, router))
+	appengine.Main()
 }
