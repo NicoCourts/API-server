@@ -112,7 +112,7 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 		Date:     time.Now(),
 	}
 
-	p := RepoCreatePost(post)
+	p := RepoCreatePost(post, r)
 	if err := json.NewEncoder(w).Encode(p); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		panic(err)
