@@ -1,4 +1,6 @@
-## NicoCourts.com Backend
+## NicoCourts.com Backend API Server
+![travis-ci status dev](https://travis-ci.com/NicoCourts/API-server.svg?branch=Live)
+
 This is a mini server written in Go that handles requests from the frontend as well as provding a central repository for the blog posts.
 
 # Plans
