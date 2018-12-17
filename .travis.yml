@@ -1,0 +1,18 @@
+language: go
+go:
+  - "1.11"
+  - master
+
+branches:
+  only:
+    Live
+
+before_script:
+  - go get -t -v ./...
+  - go build -o server .
+  - cp $GOPATH/bin/server .
+  
+script:
+  - docker build -t nicocourts/server
+  - echo "$DOCKER_PASSWORD" | docker login -u "nicocourts" --password-stdin
+  - docker push nicocourts/website:latest
