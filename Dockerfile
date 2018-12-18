@@ -1,5 +1,4 @@
-# Create 
-FROM golang:1.11
-
-WORKDIR /go/src/server
-COPY . .
+# Just copy it over and run! 
+FROM scratch
+ADD server /
+CMD ["/server"]

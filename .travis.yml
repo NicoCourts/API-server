@@ -3,16 +3,21 @@ go:
   - "1.11"
   - master
 
+env:
+  - CGO_ENABLED=0
+  - GOOS=linux
+
 branches:
   only:
     Live
 
 before_script:
   - go get -t -v ./...
-  - go build -o server .
+  - go build -v -o server .
   - cp $GOPATH/bin/server .
+  - chmod +x server
   
 script:
   - docker build -t nicocourts/server
   - echo "$DOCKER_PASSWORD" | docker login -u "nicocourts" --password-stdin
-  - docker push nicocourts/website:latest
+  - docker push nicocourts/server:latest
