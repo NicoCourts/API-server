@@ -10,7 +10,7 @@ before_script:
   - go vet ./...
   - go get -t -v ./...
   - mkdir $GOPATH/src/server
-  - cp . $GOPATH/src/server && cd $GOPATH/src/server
+  - cp ./* $GOPATH/src/server && cd $GOPATH/src/server
   - go build -v -o server .
   - cp $GOPATH/bin/server /
   - chmod +x server
