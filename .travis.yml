@@ -1,20 +1,18 @@
 language: go
 go:
   - "1.11"
-  - master
-
-env:
-  - CGO_ENABLED=0
-  - GOOS=linux
 
 branches:
   only:
     Live
 
 before_script:
+  - go vet ./...
   - go get -t -v ./...
+  - mkdir $GOPATH/src/server
+  - cp . $GOPATH/src/server && cd $GOPATH/src/server
   - go build -v -o server .
-  - cp $GOPATH/bin/server .
+  - cp $GOPATH/bin/server /
   - chmod +x server
   
 script:
