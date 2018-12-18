@@ -12,7 +12,7 @@ before_script:
   - mkdir $GOPATH/src/server
   - cp ./* $GOPATH/src/server && cd $GOPATH/src/server
   - go build -v -o server .
-  - cp $GOPATH/bin/server /
+  - cp $GOPATH/src/server /
   - chmod +x server
   
 script:
