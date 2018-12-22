@@ -11,7 +11,7 @@ before_script:
   - go get -t -v ./...
   - mkdir $GOPATH/src/server
   - cp ./* $GOPATH/src/server && cd $GOPATH/src/server
-  - go build -v -o server .
+  - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -av -tags netgo -ldflags '-w' -o server .
   - chmod +x server
   
 script:
