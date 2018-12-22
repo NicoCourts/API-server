@@ -47,7 +47,7 @@ func TestPostCreate(t *testing.T) {
 	hash := h.Sum(nil)
 
 	// Sign the hash
-	prStr, err := ioutil.ReadFile("/etc/pki/test-private.pem")
+	prStr, err := ioutil.ReadFile("/etc/pki/private.pem")
 	if err != nil {
 		t.Error("Couldn't load private key.")
 	}
