@@ -176,7 +176,7 @@ func RepoGetAllPosts() Posts {
 // databaseHelper does the work of opening the database
 func databaseHelper(c1 chan *mgo.Collection, mux *sync.Mutex) {
 	//Set up DB connection
-	session, err := mgo.Dial("db:27017")
+	session, err := mgo.Dial("mongodb:27017")
 	if err != nil {
 		panic(err)
 	}
