@@ -12,8 +12,6 @@ import (
 	"time"
 
 	"github.com/OneOfOne/xxhash"
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -37,17 +35,25 @@ func init() {
 
 // RepoCreatePost adds a new post to our data store.
 func RepoCreatePost(post Post, r *http.Request) Post {
-	// Create a context to use
-	ctx := appengine.NewContext(r)
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux)
+	c := <-ch1
 
 	// Get the id to use
 	id := getNextID(post.URLTitle, post.Date)
 	post.ID = id
 
-	// Database key
-	k := datastore.NewKey(ctx, "Posts", "0", int64(id), nil)
-
-	if _, err := datastore.Put(ctx, k, post); err != nil {
+	// Insert post
+	err := c.Insert(post)
+	if err != nil {
 		log.Fatal(err)
 	}
 
