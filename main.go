@@ -1,18 +1,11 @@
 package main
 
 import (
-	"os"
-	//"log"
+	"log"
 	"net/http"
-
-	"github.com/gorilla/handlers"
-	"google.golang.org/appengine"
 )
 
 func main() {
 	router := NewRouter()
-
-	//log.Fatal(http.ListenAndServe(":80", router))
-	http.Handle("/", handlers.CombinedLoggingHandler(os.Stderr, router))
-	appengine.Main()
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
