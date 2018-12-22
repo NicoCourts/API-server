@@ -25,11 +25,11 @@ func TestPostCreate(t *testing.T) {
 
 	body, err = ioutil.ReadAll(res.Body)
 	if err != nil {
-		t.Error("read nonce body")
+		t.Error("Problem reading nonce body")
 	}
 	err = json.Unmarshal(body, &nonce)
 	if err != nil {
-		t.Error("Unmarshal nonce")
+		t.Error("Problem unmarshalling nonce")
 	}
 
 	// Create dummy Input
@@ -54,12 +54,12 @@ func TestPostCreate(t *testing.T) {
 	block, _ := pem.Decode([]byte(prStr))
 	prKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
-		t.Error("Private key")
+		t.Error("Problem decoding private key")
 	}
 
 	sig, err := rsa.SignPKCS1v15(rand.Reader, prKey, crypto.SHA512, hash)
 	if err != nil {
-		t.Error("sign")
+		t.Error("Problem with creating a signature.")
 	}
 
 	// Create SignedInput
