@@ -52,6 +52,7 @@ func TestPostCreate(t *testing.T) {
 		t.Error("Couldn't load private key.")
 	}
 	block, _ := pem.Decode([]byte(prStr))
+
 	prKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		t.Error("Problem decoding private key")
