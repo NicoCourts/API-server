@@ -86,7 +86,7 @@ func RepoGetPost(postID string) Post {
 	c := <-ch1
 
 	var post Post
-	err := c.Find(bson.M{"_id": postID}).One(&post)
+	err := c.Find(bson.M{"_id": []byte(postID)}).One(&post)
 	if err != nil {
 		log.Fatal("Problem with reading post!")
 	}
