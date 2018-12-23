@@ -19,7 +19,7 @@ import (
 var currentID int
 
 func init() {
-	p := Post{
+	/* p := Post{
 		ID:       1234,
 		Title:    "There",
 		URLTitle: "there",
@@ -30,7 +30,7 @@ func init() {
 	}
 
 	req, _ := http.NewRequest("GET", "/post/", nil)
-	RepoCreatePost(p, req)
+	RepoCreatePost(p, req) */
 }
 
 // RepoCreatePost adds a new post to our data store.
@@ -72,7 +72,7 @@ func getNextID(title string, date time.Time) uint32 {
 
 // RepoGetPost returns the post for the given ID (if one exists). If
 //	not, return a blank post.
-func RepoGetPost(urltitle string) Post {
+func RepoGetPost(postID string) Post {
 	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
 	var mux sync.Mutex
@@ -86,7 +86,7 @@ func RepoGetPost(urltitle string) Post {
 	c := <-ch1
 
 	var post Post
-	err := c.Find(bson.M{"urltitle": urltitle}).One(&post)
+	err := c.Find(bson.M{"_id": postID}).One(&post)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -95,7 +95,7 @@ func RepoGetPost(urltitle string) Post {
 }
 
 // RepoDestroyPost deletes (disables, actually) a post.
-func RepoDestroyPost(urltitle string) error {
+func RepoDestroyPost(postID string) error {
 	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
 	var mux sync.Mutex
@@ -110,10 +110,11 @@ func RepoDestroyPost(urltitle string) error {
 
 	// Find post, if it exists
 	var post Post
-	err := c.Find(bson.M{"urltitle": urltitle}).One(&post)
+	err := c.Find(bson.M{"_id": postID}).One(&post)
 	var e Post
+
 	if post == e {
-		return fmt.Errorf("Could not find Post with ID of %s to delete", urltitle)
+		return fmt.Errorf("Could not find Post with ID of %s to delete", postID)
 
 	}
 
