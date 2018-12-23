@@ -53,7 +53,7 @@ func PostShow(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(RepoGetPost(postID)); err != nil {
-		panic(err)
+		panic("Error with JSON encoding")
 	}
 }
 

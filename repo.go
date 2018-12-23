@@ -88,7 +88,7 @@ func RepoGetPost(postID string) Post {
 	var post Post
 	err := c.Find(bson.M{"_id": postID}).One(&post)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Problem with reading post!")
 	}
 
 	return post
