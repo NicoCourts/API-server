@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -19,7 +20,7 @@ import (
 var currentID int
 
 func init() {
-	/* p := Post{
+	p := Post{
 		ID:       1234,
 		Title:    "There",
 		URLTitle: "there",
@@ -30,7 +31,7 @@ func init() {
 	}
 
 	req, _ := http.NewRequest("GET", "/post/", nil)
-	RepoCreatePost(p, req) */
+	RepoCreatePost(p, req)
 }
 
 // RepoCreatePost adds a new post to our data store.
@@ -86,7 +87,8 @@ func RepoGetPost(postID string) Post {
 	c := <-ch1
 
 	var post Post
-	err := c.Find(bson.M{"_id": []byte(postID)}).One(&post)
+	id, _ := strconv.Atoi(postID)
+	err := c.Find(bson.M{"id": id}).One(&post)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -110,7 +112,8 @@ func RepoDestroyPost(postID string) error {
 
 	// Find post, if it exists
 	var post Post
-	err := c.Find(bson.M{"_id": postID}).One(&post)
+	id, _ := strconv.Atoi(postID)
+	err := c.Find(bson.M{"id": id}).One(&post)
 	var e Post
 
 	if post == e {
@@ -119,7 +122,7 @@ func RepoDestroyPost(postID string) error {
 	}
 
 	// Toggle visibility
-	err = c.Update(post, bson.M{"visible": false})
+	err = c.Update(post, bson.M{"$set": bson.M{"visible": false}})
 	if err != nil {
 		return fmt.Errorf("Could not update post")
 	}
@@ -177,7 +180,8 @@ func RepoGetAllPosts() Posts {
 // databaseHelper does the work of opening the database
 func databaseHelper(c1 chan *mgo.Collection, mux *sync.Mutex) {
 	//Set up DB connection
-	session, err := mgo.Dial("mongodb:27017")
+	//session, err := mgo.Dial("mongodb:27017") //production
+	session, err := mgo.Dial("localhost:27017") //dev
 	if err != nil {
 		panic(err)
 	}

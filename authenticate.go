@@ -14,7 +14,8 @@ import (
 var PuKey *rsa.PublicKey
 
 func init() {
-	pubStr, err := ioutil.ReadFile("/etc/pki/public.pem")
+	//pubStr, err := ioutil.ReadFile("/etc/pki/public.pem") //production
+	pubStr, err := ioutil.ReadFile("/home/nico/omfg_lag/pki/public.pem") //dev
 	if err != nil {
 		panic("Couldn't open public key file")
 	}

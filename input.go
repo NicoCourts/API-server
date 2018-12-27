@@ -13,3 +13,10 @@ type SignedInput struct {
 	Sig  []byte
 	Nnce Nonce
 }
+
+// SignedDeleteRequest is a post ID/sig/Nonce triple.
+type SignedDeleteRequest struct {
+	ID   int
+	Sig  []byte
+	Nnce Nonce
+}

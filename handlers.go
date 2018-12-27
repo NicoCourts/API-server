@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -38,7 +39,7 @@ func AllPostIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(RepoGetVisiblePosts()); err != nil {
+	if err := json.NewEncoder(w).Encode(RepoGetAllPosts()); err != nil {
 		panic(err)
 	}
 }
@@ -126,8 +127,47 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 
 // PostDelete deletes the post with the given ID
 func PostDelete(w http.ResponseWriter, r *http.Request) {
+	var input SignedDeleteRequest
+
+	// Don't allow people to flood our API with data
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1000000))
+
+	if err != nil {
+		panic(err)
+	}
+	if err := r.Body.Close(); err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	if err := json.Unmarshal(body, &input); err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+
+		if err := json.NewEncoder(w).Encode(err); err != nil {
+			panic(err)
+		}
+		return
+	}
+
+	// Ensure the request is valid
 	vars := mux.Vars(r)
 	postID := vars["postID"]
+	id, _ := strconv.Atoi(postID)
+	if id != input.ID {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Print(fmt.Sprintf("Bad Delete Request: Expected ID %v, got ID %v.", postID, input.ID))
+		return
+	}
+
+	// Verify nonce and signature
+	var in []byte
+	in = []byte(postID)
+	if !Verify(in, input.Nnce, input.Sig) {
+		w.WriteHeader(http.StatusUnauthorized)
+		log.Print("Unauthorized Access Attempt")
+		return
+	}
 
 	if err := RepoDestroyPost(postID); err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
