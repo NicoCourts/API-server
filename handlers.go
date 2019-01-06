@@ -51,6 +51,8 @@ func PostShow(w http.ResponseWriter, r *http.Request) {
 
 	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	// TODO Replace this for production
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 
 	p := RepoGetPost(postID)
