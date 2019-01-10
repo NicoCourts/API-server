@@ -18,6 +18,7 @@ import (
 // Index just welcomes you
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Welcome to the NicoCourts.com blog API!")
+	fmt.Fprintln(w, "Visit https://api.nicocourts.com/posts for the post list.")
 }
 
 // PostIndex returns a JSON list of all posts
@@ -25,6 +26,9 @@ func PostIndex(w http.ResponseWriter, r *http.Request) {
 
 	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	// TODO Replace this for production
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(RepoGetVisiblePosts()); err != nil {
@@ -37,6 +41,9 @@ func AllPostIndex(w http.ResponseWriter, r *http.Request) {
 
 	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	// TODO Replace this for production
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(RepoGetAllPosts()); err != nil {
@@ -53,6 +60,7 @@ func PostShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	// TODO Replace this for production
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
 	w.WriteHeader(http.StatusOK)
 
 	p := RepoGetPost(postID)
@@ -80,6 +88,9 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	// TODO Replace this for production
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
 
 	if err := json.Unmarshal(body, &input); err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
@@ -165,6 +176,11 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	// Verify nonce and signature
 	var in []byte
 	in = []byte(postID)
+
+	// TODO Replace this for production
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
+
 	if !Verify(in, input.Nnce, input.Sig) {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Print("Unauthorized Access Attempt")
@@ -185,6 +201,9 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 func ReadNonce(w http.ResponseWriter, r *http.Request) {
 	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	// TODO Replace this for production
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(CurrentNonce()); err != nil {
