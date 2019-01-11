@@ -61,14 +61,16 @@ func PostShow(w http.ResponseWriter, r *http.Request) {
 	// TODO Replace this for production
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
-	w.WriteHeader(http.StatusOK)
 
 	p := RepoGetPost(postID)
-	log.Printf(string(p.ID))
-
-	if err := json.NewEncoder(w).Encode(p); err != nil {
-		panic("Error with JSON encoding")
+	if (p != Post{}) {
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(p); err != nil {
+			panic("Error with JSON encoding")
+		}
 	}
+	// Found nothing
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // PostCreate inserts a new post into the repo. Requests will be JSON of
