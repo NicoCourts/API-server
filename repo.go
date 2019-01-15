@@ -22,7 +22,7 @@ var currentID int
 func init() {
 	//Code for providing test data
 
-	p := Post{
+	/*p := Post{
 		ID:       1234,
 		Title:    "This is a sample post.",
 		URLTitle: "this-is-a-sample-post-1",
@@ -37,6 +37,7 @@ func init() {
 	RepoCreatePost(p, req)
 
 	RepoDestroyPost("632867513")
+	*/
 }
 
 // RepoCreatePost adds a new post to our data store.
