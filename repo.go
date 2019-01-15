@@ -79,7 +79,7 @@ func getNextID(title string, date time.Time) uint32 {
 
 // RepoGetPost returns the post for the given ID (if one exists). If
 //	not, return a blank post.
-func RepoGetPost(postID string) Post {
+func RepoGetPost(urltitle string) Post {
 	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
 	var mux sync.Mutex
@@ -93,8 +93,7 @@ func RepoGetPost(postID string) Post {
 	c := <-ch1
 
 	var post Post
-	id, _ := strconv.Atoi(postID)
-	err := c.Find(bson.M{"urltitle": id}).One(&post)
+	err := c.Find(bson.M{"urltitle": urltitle}).One(&post)
 	if err != nil {
 		log.Print("Post not found!")
 		return Post{}
