@@ -21,21 +21,22 @@ var currentID int
 
 func init() {
 	//Code for providing test data
-	/*
-	 *	p := Post{
-	 *		ID:       1234,
-	 *		Title:    "This is a sample post.",
-	 *		URLTitle: "this-is-a-sample-post",
-	 *		Body: "<p>I am wanting to provide a longer post this time. In particular I want line breaks and" +
-	 *			"eventually to constrain the number of words that will appear in the preview.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ipsum elit, consectetur eget ex eget, aliquet bibendum quam. Sed accumsan, leo vitae lobortis mollis, metus ante tempor enim, vel mollis lectus nisl eu erat. Mauris lorem ipsum, accumsan sit amet est aliquet, lobortis hendrerit elit. Suspendisse potenti. Fusce ac diam et ante lobortis rhoncus vehicula ac dolor. Phasellus porttitor, arcu at mollis faucibus, dui lacus vestibulum nisi, ut consectetur leo mi laoreet justo. Aenean rhoncus eget mi vitae tincidunt. Duis vitae ex quis massa tincidunt mollis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Curabitur vel urna eget sapien pharetra commodo. Nullam maximus massa vitae enim gravida maximus. Maecenas tempus tortor fermentum quam viverra, vel iaculis dolor consequat. Vestibulum a ex vitae augue mollis condimentum. Ut finibus leo magna, non aliquet nulla hendrerit a. Vestibulum sagittis ut turpis sed iaculis.</p>",
-	 *		Date:    time.Now(),
-	 *		Visible: true,
-	 *		IsShort: false,
-	 *	}
-	 *
-	 *	req, _ := http.NewRequest("GET", "/post/", nil)
-	 *	RepoCreatePost(p, req)
-	 */
+
+	p := Post{
+		ID:       1234,
+		Title:    "This is a sample post.",
+		URLTitle: "this-is-a-sample-post-1",
+		Body: "<p>I am wanting to provide a longer post this time. In particular I want line breaks and " +
+			"eventually to constrain the number of words that will appear in the preview.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ipsum elit, consectetur eget ex eget, aliquet bibendum quam. Sed accumsan, leo vitae lobortis mollis, metus ante tempor enim, vel mollis lectus nisl eu erat. Mauris lorem ipsum, accumsan sit amet est aliquet, lobortis hendrerit elit. Suspendisse potenti. Fusce ac diam et ante lobortis rhoncus vehicula ac dolor. Phasellus porttitor, arcu at mollis faucibus, dui lacus vestibulum nisi, ut consectetur leo mi laoreet justo. Aenean rhoncus eget mi vitae tincidunt. Duis vitae ex quis massa tincidunt mollis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Curabitur vel urna eget sapien pharetra commodo. Nullam maximus massa vitae enim gravida maximus. Maecenas tempus tortor fermentum quam viverra, vel iaculis dolor consequat. Vestibulum a ex vitae augue mollis condimentum. Ut finibus leo magna, non aliquet nulla hendrerit a. Vestibulum sagittis ut turpis sed iaculis.</p>",
+		Date:    time.Now(),
+		Visible: true,
+		IsShort: false,
+	}
+
+	req, _ := http.NewRequest("GET", "/post/", nil)
+	RepoCreatePost(p, req)
+
+	RepoDestroyPost("632867513")
 }
 
 // RepoCreatePost adds a new post to our data store.
