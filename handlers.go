@@ -231,12 +231,14 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	io.Copy(f, buf)
 
 	// Everything went swimmingly. Return the url for the resource.
-	type resp struct{ url string }
+	type resp struct {
+		url string `json:"url"`
+	}
 	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	// TODO Replace this for production
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	err = json.NewEncoder(w).Encode(name)
+	err = json.NewEncoder(w).Encode(resp{"https://nicocourts.com/img/" + name})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
