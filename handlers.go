@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -197,6 +198,17 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusAccepted)
 
+}
+
+// UploadImage takes in some multipart form info representing an image
+//	and returns a URL for the resource if the upload is successful.
+func UploadImage(w http.ResponseWriter, r *http.Request) {
+	file, handler, _ := r.FormFile("image")
+	defer file.Close()
+
+	f, _ := os.OpenFile("/etc/img/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+	defer f.Close()
+	io.Copy(f, file)
 }
 
 // ReadNonce prints out the current nonce to use for authentication

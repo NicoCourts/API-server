@@ -21,13 +21,13 @@ func init() {
 	}
 	block, _ := pem.Decode([]byte(pubStr))
 	if block == nil {
-		panic("Bah public key")
+		panic("Couldn't decode public key from bytearray.")
 	}
 	puKey, err := x509.ParsePKIXPublicKey(block.Bytes)
 	PuKey = puKey.(*rsa.PublicKey)
 
 	if err != nil {
-		panic("Can't set pubkey")
+		panic("Couldn't parse public key.")
 	}
 }
 

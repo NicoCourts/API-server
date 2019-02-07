@@ -65,4 +65,10 @@ var routes = Routes{
 		"/nonce/update/",
 		NonceUpdate,
 	},
+	Route{
+		"UploadImage",
+		"POST",
+		"/upload/",
+		UploadImage,
+	},
 }
