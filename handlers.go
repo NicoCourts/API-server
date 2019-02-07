@@ -232,7 +232,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	// Everything went swimmingly. Return the url for the resource.
 	type resp struct {
-		url string `json:"url"`
+		URL string `json:"url"`
 	}
 	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
