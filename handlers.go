@@ -220,7 +220,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write the file to disk
-	f, err := os.OpenFile("/etc/img/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+	f, err := os.OpenFile("/etc/img/"+name, os.O_WRONLY|os.O_CREATE, 0666)
 	//f, err := os.OpenFile("/home/nico/"+name, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
@@ -236,7 +236,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	// TODO Replace this for production
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	err = json.NewEncoder(w).Encode(resp{"https://nicocourts.com/img/" + name})
+	err = json.NewEncoder(w).Encode(name)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
