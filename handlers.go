@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -197,18 +200,48 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusAccepted)
-
 }
 
 // UploadImage takes in some multipart form info representing an image
 //	and returns a URL for the resource if the upload is successful.
 func UploadImage(w http.ResponseWriter, r *http.Request) {
-	file, handler, _ := r.FormFile("image")
+	// Read the file from the request
+	file, handler, err := r.FormFile("image")
 	defer file.Close()
 
-	f, _ := os.OpenFile("/etc/img/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+	// Get new filename
+	h := md5.New()
+	buf := io.TeeReader(file, h)
+	name := hex.EncodeToString(h.Sum(nil)) + filepath.Ext(handler.Filename)
+
+	if err != nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	// Write the file to disk
+	f, err := os.OpenFile("/etc/img/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+	//f, err := os.OpenFile("/home/nico/"+name, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+
 	defer f.Close()
-	io.Copy(f, file)
+	io.Copy(f, buf)
+
+	// Everything went swimmingly. Return the url for the resource.
+	type resp struct{ url string }
+	// Responsibly declare our content type and return code
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	// TODO Replace this for production
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	err = json.NewEncoder(w).Encode(resp{"https://nicocourts.com/img/" + name})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 }
 
 // ReadNonce prints out the current nonce to use for authentication
