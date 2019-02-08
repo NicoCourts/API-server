@@ -159,6 +159,60 @@ func RepoGetVisiblePosts() Posts {
 	return posts
 }
 
+// RepoAddImage adds a new image to the database
+func RepoAddImage(filename string, extension string, shortname string) Image {
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux, "images")
+	c := <-ch1
+
+	// Create the Image
+	img := Image{
+		Filename: filename + extension,
+		Title:    shortname,
+		AltText:  shortname,
+		URL:      "https://nicocourts.com/img/" + filename + extension,
+		Date:     time.Now(),
+	}
+
+	// Insert post
+	err := c.Insert(img)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return img
+}
+
+// RepoGetImageList returns a list of all available images with urls and friendly names
+func RepoGetImageList() Images {
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux, "images")
+	c := <-ch1
+
+	var images Images
+	if err := c.Find(bson.M{}).All(&images); err != nil {
+		log.Fatal(err)
+	}
+
+	return images
+}
+
 // RepoGetAllPosts returns a list of all visible posts (publc)
 func RepoGetAllPosts() Posts {
 	// Create channel and mutex
@@ -183,17 +237,22 @@ func RepoGetAllPosts() Posts {
 }
 
 // databaseHelper does the work of opening the database
-func databaseHelper(c1 chan *mgo.Collection, mux *sync.Mutex) {
+func databaseHelper(c1 chan *mgo.Collection, mux *sync.Mutex, table ...string) {
+	//Parse optional argument
+	if len(table) == 0 {
+		table = append(table, "posts")
+	}
+
 	//Set up DB connection
-	session, err := mgo.Dial("mongodb:27017") //production
-	//session, err := mgo.Dial("localhost:27017") //dev
+	//session, err := mgo.Dial("mongodb:27017") //production
+	session, err := mgo.Dial("localhost:27017") //dev
 	if err != nil {
 		panic(err)
 	}
 	defer session.Close()
 
 	// Choose database and collection
-	conn := session.DB("postDB").C("posts")
+	conn := session.DB("postDB").C(table[0])
 
 	// Send back connection.
 	c1 <- conn

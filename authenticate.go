@@ -14,8 +14,8 @@ import (
 var PuKey *rsa.PublicKey
 
 func init() {
-	pubStr, err := ioutil.ReadFile("/etc/pki/public.pem") //production
-	//pubStr, err := ioutil.ReadFile("/home/nico/omfg_lag/pki/public.pem") //dev
+	//pubStr, err := ioutil.ReadFile("/etc/pki/public.pem") //production
+	pubStr, err := ioutil.ReadFile("/home/nico/omfg_lag/pki/public.pem") //dev
 	if err != nil {
 		panic("Couldn't open public key file")
 	}
@@ -32,20 +32,20 @@ func init() {
 }
 
 // Verify verifies the signature on the provided data.
-func Verify(in []byte, nonce Nonce, sig []byte) bool {
+func Verify(in []byte, nonce []byte, sig []byte) bool {
 	// If the nonce has expired or is wrong, just end it
 	if NonceIsOlderThan(30 * time.Minute) {
 		UpdateNonce()
 		return false
 	}
-	if !VerifyNonce(nonce.Value) {
+	if !VerifyNonce(nonce) {
 		return false
 	}
 
 	// Create hash
 	//	Nonce first, then data
 	h := sha512.New()
-	h.Write(nonce.Value)
+	h.Write(nonce)
 	h.Write(in)
 
 	// Get that hash

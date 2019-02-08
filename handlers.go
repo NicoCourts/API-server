@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
@@ -19,6 +20,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var origin string
+
+func init() {
+	// TODO Replace this for production
+	origin = "*"
+	// origin = "https://nicocourts.com"
+}
+
 // Index just welcomes you
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Welcome to the NicoCourts.com blog API!")
@@ -30,9 +39,7 @@ func PostIndex(w http.ResponseWriter, r *http.Request) {
 
 	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	// TODO Replace this for production
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(RepoGetVisiblePosts()); err != nil {
@@ -45,9 +52,7 @@ func AllPostIndex(w http.ResponseWriter, r *http.Request) {
 
 	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	// TODO Replace this for production
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(RepoGetAllPosts()); err != nil {
@@ -62,9 +67,7 @@ func PostShow(w http.ResponseWriter, r *http.Request) {
 
 	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	// TODO Replace this for production
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 
 	p := RepoGetPost(postID)
 	if (p != Post{}) {
@@ -93,10 +96,9 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	// TODO Replace this for production
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 
 	if err := json.Unmarshal(body, &input); err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
@@ -146,7 +148,7 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 
 // PostDelete deletes the post with the given ID
 func PostDelete(w http.ResponseWriter, r *http.Request) {
-	var input SignedDeleteRequest
+	var input SignedPostDeleteRequest
 
 	// Don't allow people to flood our API with data
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1000000))
@@ -158,7 +160,9 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 
 	if err := json.Unmarshal(body, &input); err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
@@ -183,10 +187,6 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	var in []byte
 	in = []byte(postID)
 
-	// TODO Replace this for production
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
-
 	if !Verify(in, input.Nnce, input.Sig) {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Print("Unauthorized Access Attempt")
@@ -202,26 +202,100 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
+// ImageDelete deletes the post with the given ID
+func ImageDelete(w http.ResponseWriter, r *http.Request) {
+	var input SignedImageDeleteRequest
+
+	// Don't allow people to flood our API with data
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1000000))
+
+	if err != nil {
+		panic(err)
+	}
+	if err := r.Body.Close(); err != nil {
+		panic(err)
+	}
+
+	// Responsibly declare our content type and return code
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+
+	if err := json.Unmarshal(body, &input); err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+
+		if err := json.NewEncoder(w).Encode(err); err != nil {
+			panic(err)
+		}
+		return
+	}
+
+	// Ensure the request is valid
+	vars := mux.Vars(r)
+	filename := vars["filename"]
+
+	if filename != input.Filename {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Print(fmt.Sprintf("Bad Delete Request: Expected ID %v, got ID %v.", filename, input.Filename))
+		return
+	}
+
+	// Verify nonce and signature
+	var in []byte
+	in = []byte(filename)
+
+	if !Verify(in, input.Nnce, input.Sig) {
+		w.WriteHeader(http.StatusUnauthorized)
+		log.Print("Unauthorized Access Attempt")
+		return
+	}
+
+	// Everything is kosher -- delete the file.
+	//f err := os.Remove("/etc/img/" + filename); err != nil {
+	if err := os.Remove("/home/nico/" + filename); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Print(err)
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+}
+
 // UploadImage takes in some multipart form info representing an image
 //	and returns a URL for the resource if the upload is successful.
 func UploadImage(w http.ResponseWriter, r *http.Request) {
 	// Read the file from the request
 	file, handler, err := r.FormFile("image")
+	sig := r.FormValue("sig")
+	nonce := r.FormValue("nonce")
+
 	defer file.Close()
 
 	// Get new filename
 	h := md5.New()
+	bs := bytes.NewBuffer(nil)
 	buf := io.TeeReader(file, h)
-	name := hex.EncodeToString(h.Sum(nil)) + filepath.Ext(handler.Filename)
+	if _, err := io.Copy(bs, buf); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Print(err)
+		return
+	}
+	checksum := h.Sum(nil)
+	name := hex.EncodeToString(checksum) + filepath.Ext(handler.Filename)
 
 	if err != nil {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
+	if !Verify(bs.Bytes(), []byte(nonce), []byte(sig)) {
+		w.WriteHeader(http.StatusUnauthorized)
+		log.Print("Unauthorized Access Attempt")
+		return
+	}
+
 	// Write the file to disk
-	f, err := os.OpenFile("/etc/img/"+name, os.O_WRONLY|os.O_CREATE, 0666)
-	//f, err := os.OpenFile("/home/nico/"+name, os.O_WRONLY|os.O_CREATE, 0666)
+	//f, err := os.OpenFile("/etc/img/"+name, os.O_WRONLY|os.O_CREATE, 0666)
+	f, err := os.OpenFile("/home/nico/"+name, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
@@ -230,20 +304,30 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 	io.Copy(f, buf)
 
-	// Everything went swimmingly. Return the url for the resource.
-	type resp struct {
-		URL string `json:"url"`
-	}
 	// Responsibly declare our content type and return code
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	// TODO Replace this for production
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	err = json.NewEncoder(w).Encode(resp{"https://nicocourts.com/img/" + name})
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+
+	img := RepoAddImage(hex.EncodeToString(checksum), filepath.Ext(handler.Filename), (handler.Filename)[0:len(handler.Filename)-len(filepath.Ext(handler.Filename))])
+	err = json.NewEncoder(w).Encode(img)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	// Great!
 	w.WriteHeader(http.StatusCreated)
+}
+
+// GetImageList returns a list of currently-available images along with some metadata.
+func GetImageList(w http.ResponseWriter, r *http.Request) {
+	// Responsibly declare our content type and return code
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(RepoGetImageList()); err != nil {
+		panic(err)
+	}
 }
 
 // ReadNonce prints out the current nonce to use for authentication

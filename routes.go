@@ -71,4 +71,16 @@ var routes = Routes{
 		"/upload/",
 		UploadImage,
 	},
+	Route{
+		"ImageList",
+		"GET",
+		"/images/",
+		GetImageList,
+	},
+	Route{
+		"Image",
+		"DELETE",
+		"/image/{filename}",
+		ImageDelete,
+	},
 }
