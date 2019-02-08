@@ -113,7 +113,7 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 	var in []byte
 	in = append(in, []byte(input.In.Title)...)
 	in = append(in, []byte(input.In.Body)...)
-	if !Verify(in, input.Nnce, input.Sig) {
+	if !Verify(in, input.Nnce.Value, input.Sig) {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Print("Unauthorized Access Attempt")
 		return
@@ -187,7 +187,7 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	var in []byte
 	in = []byte(postID)
 
-	if !Verify(in, input.Nnce, input.Sig) {
+	if !Verify(in, input.Nnce.Value, input.Sig) {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Print("Unauthorized Access Attempt")
 		return
@@ -243,7 +243,7 @@ func ImageDelete(w http.ResponseWriter, r *http.Request) {
 	var in []byte
 	in = []byte(filename)
 
-	if !Verify(in, input.Nnce, input.Sig) {
+	if !Verify(in, input.Nnce.Value, input.Sig) {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Print("Unauthorized Access Attempt")
 		return
