@@ -244,8 +244,8 @@ func databaseHelper(c1 chan *mgo.Collection, mux *sync.Mutex, table ...string) {
 	}
 
 	//Set up DB connection
-	session, err := mgo.Dial("mongodb:27017") //production
-	//session, err := mgo.Dial("localhost:27017") //dev
+	//session, err := mgo.Dial("mongodb:27017") //production
+	session, err := mgo.Dial("localhost:27017") //dev
 	if err != nil {
 		panic(err)
 	}

@@ -45,7 +45,6 @@ func CurrentNonce() Nonce {
 func VerifyNonce(in []byte) bool {
 	// Update the nonce after checking for equality
 	defer UpdateNonce()
-
 	return bytes.Equal(in, theNonce.Value)
 }
 

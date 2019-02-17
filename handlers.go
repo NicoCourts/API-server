@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
@@ -9,11 +8,12 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mime"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -84,8 +84,6 @@ func PostShow(w http.ResponseWriter, r *http.Request) {
 //	the form {"title":"t", "body":"b", "isshort":T/F} where t and b are
 //	treated as html that has been escaped via html.EscapeString().
 func PostCreate(w http.ResponseWriter, r *http.Request) {
-	var input SignedInput
-
 	// Don't allow people to flood our API with data
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1000000))
 
@@ -100,27 +98,16 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", origin)
 
-	if err := json.Unmarshal(body, &input); err != nil {
-		w.WriteHeader(http.StatusUnprocessableEntity)
-
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
-		return
-	}
-
-	// Verify nonce and signature
-	var in []byte
-	in = append(in, []byte(input.In.Title)...)
-	in = append(in, []byte(input.In.Body)...)
-	if !Verify(in, input.Nnce.Value, input.Sig) {
+	// Refactoring to maximize code reuse
+	var input Input
+	if err := Verify(body, &input); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Print("Unauthorized Access Attempt")
 		return
 	}
 
 	// Make the URLTitle
-	urlTitle := strings.Replace(strings.ToLower(input.In.Title), " ", "-", -1)
+	urlTitle := strings.Replace(strings.ToLower(input.Title), " ", "-", -1)
 	re := regexp.MustCompile("[^a-zA-Z0-9-]+")
 	urlTitle = re.ReplaceAllString(urlTitle, "")
 	if len(urlTitle) > 35 {
@@ -129,10 +116,10 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 
 	// We've confirmed authenticity at this point. Prepare post for insertion.
 	post := Post{
-		Title:    input.In.Title,
+		Title:    input.Title,
 		URLTitle: urlTitle,
-		Body:     input.In.Body,
-		IsShort:  input.In.IsShort,
+		Body:     input.Body,
+		IsShort:  input.IsShort,
 		Visible:  true,
 		Date:     time.Now(),
 	}
@@ -148,8 +135,6 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 
 // PostDelete deletes the post with the given ID
 func PostDelete(w http.ResponseWriter, r *http.Request) {
-	var input SignedPostDeleteRequest
-
 	// Don't allow people to flood our API with data
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1000000))
 
@@ -164,36 +149,17 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", origin)
 
-	if err := json.Unmarshal(body, &input); err != nil {
-		w.WriteHeader(http.StatusUnprocessableEntity)
-
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
-		return
+	type DelPost struct {
+		ToRemove string
 	}
-
-	// Ensure the request is valid
-	vars := mux.Vars(r)
-	postID := vars["postID"]
-	id, _ := strconv.Atoi(postID)
-	if id != input.ID {
-		w.WriteHeader(http.StatusBadRequest)
-		log.Print(fmt.Sprintf("Bad Delete Request: Expected ID %v, got ID %v.", postID, input.ID))
-		return
-	}
-
-	// Verify nonce and signature
-	var in []byte
-	in = []byte(postID)
-
-	if !Verify(in, input.Nnce.Value, input.Sig) {
+	var in DelPost
+	if err := Verify(body, &in); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Print("Unauthorized Access Attempt")
 		return
 	}
 
-	if err := RepoDestroyPost(postID); err != nil {
+	if err := RepoDestroyPost(in.ToRemove); err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
@@ -204,8 +170,6 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 
 // ImageDelete deletes the post with the given ID
 func ImageDelete(w http.ResponseWriter, r *http.Request) {
-	var input SignedImageDeleteRequest
-
 	// Don't allow people to flood our API with data
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1000000))
 
@@ -220,30 +184,11 @@ func ImageDelete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", origin)
 
-	if err := json.Unmarshal(body, &input); err != nil {
-		w.WriteHeader(http.StatusUnprocessableEntity)
-
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
-		return
+	type PicData struct {
+		Filename string
 	}
-
-	// Ensure the request is valid
-	vars := mux.Vars(r)
-	filename := vars["filename"]
-
-	if filename != input.Filename {
-		w.WriteHeader(http.StatusBadRequest)
-		log.Print(fmt.Sprintf("Bad Delete Request: Expected ID %v, got ID %v.", filename, input.Filename))
-		return
-	}
-
-	// Verify nonce and signature
-	var in []byte
-	in = []byte(filename)
-
-	if !Verify(in, input.Nnce.Value, input.Sig) {
+	var data PicData
+	if err := Verify(body, &data); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Print("Unauthorized Access Attempt")
 		return
@@ -251,7 +196,7 @@ func ImageDelete(w http.ResponseWriter, r *http.Request) {
 
 	// Everything is kosher -- delete the file.
 	//f err := os.Remove("/etc/img/" + filename); err != nil {
-	if err := os.Remove("/home/nico/" + filename); err != nil {
+	if err := os.Remove("/home/nico/" + data.Filename); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Print(err)
 		return
@@ -261,55 +206,73 @@ func ImageDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 // UploadImage takes in some multipart form info representing an image
-//	and returns a URL for the resource if the upload is successful.
+//	and returns metadata for the resource if the upload is successful.
 func UploadImage(w http.ResponseWriter, r *http.Request) {
-	// Read the file from the request
-	file, handler, err := r.FormFile("image")
-	sig := r.FormValue("sig")
-	nonce := r.FormValue("nonce")
-
-	defer file.Close()
-
-	// Get new filename
-	h := md5.New()
-	bs := bytes.NewBuffer(nil)
-	buf := io.TeeReader(file, h)
-	if _, err := io.Copy(bs, buf); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if err != nil {
+		log.Print("Can't read media headers")
 		log.Print(err)
 		return
 	}
-	checksum := h.Sum(nil)
-	name := hex.EncodeToString(checksum) + filepath.Ext(handler.Filename)
-
+	// Don't allow people to flood our API with data
+	rdr := multipart.NewReader(r.Body, params["boundary"])
+	form, err := rdr.ReadForm(50000000)
 	if err != nil {
-		w.WriteHeader(http.StatusNoContent)
-		return
+		panic(err)
 	}
 
-	if !Verify(bs.Bytes(), []byte(nonce), []byte(sig)) {
+	var img multipart.File
+	var filename string
+	for k, v := range form.File {
+		img, _ = v[0].Open()
+		filename = k
+	}
+
+	Sig := form.Value["Sig"][0]
+	Nonce := form.Value["Nonce"][0]
+
+	// Responsibly declare our content type and return code
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	type Nothing struct{}
+	type SignNothing struct {
+		Payload interface{}
+		Sig     string
+		Nonce   string
+	}
+	var nada Nothing
+	blob, _ := json.Marshal(SignNothing{nil, Sig, Nonce})
+
+	if err := Verify(blob, &nada); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Print("Unauthorized Access Attempt")
+		log.Print(err)
 		return
 	}
 
+	// Get new filename
+	h := md5.New()
+	var imgBytes []byte
+	img.Read(imgBytes)
+	h.Sum(imgBytes)
+	checksum := h.Sum(nil)
+
+	name := hex.EncodeToString(checksum) + filepath.Ext(filename)
+
 	// Write the file to disk
-	f, err := os.OpenFile("/etc/img/"+name, os.O_WRONLY|os.O_CREATE, 0666)
-	//f, err := os.OpenFile("/home/nico/"+name, os.O_WRONLY|os.O_CREATE, 0666)
+	//f, err := os.OpenFile("/etc/img/"+name, os.O_WRONLY|os.O_CREATE, 0666)
+	f, err := os.OpenFile("/home/nico/"+name, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
 
 	defer f.Close()
-	io.Copy(f, buf)
+	f.Write(imgBytes)
 
-	// Responsibly declare our content type and return code
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", origin)
-
-	img := RepoAddImage(hex.EncodeToString(checksum), filepath.Ext(handler.Filename), (handler.Filename)[0:len(handler.Filename)-len(filepath.Ext(handler.Filename))])
-	err = json.NewEncoder(w).Encode(img)
+	image := RepoAddImage(hex.EncodeToString(checksum), filepath.Ext(filename), (filename)[0:len(filename)-len(filepath.Ext(filename))])
+	err = json.NewEncoder(w).Encode(image)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -339,7 +302,9 @@ func ReadNonce(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
 	w.WriteHeader(http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(CurrentNonce()); err != nil {
+	nonce := CurrentNonce()
+
+	if err := json.NewEncoder(w).Encode(nonce); err != nil {
 		panic(err)
 	}
 }
