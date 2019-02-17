@@ -29,7 +29,7 @@ func init() {
 // Index just welcomes you
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Welcome to the NicoCourts.com API!")
-	fmt.Fprintln(w, "Visit https://api.nicocourts.com/posts for the post list.")
+	fmt.Fprintln(w, "Visit <a href='https://api.nicocourts.com/posts'>this link</a> for the post list.")
 }
 
 // PostIndex returns a JSON list of all posts
@@ -268,8 +268,8 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	log.Print("Name: " + name)
 
 	// Write the file to disk
-	//f, err := os.OpenFile("/etc/img/"+name, os.O_WRONLY|os.O_CREATE, 0666)
-	f, err := os.OpenFile("/home/nico/"+name, os.O_WRONLY|os.O_CREATE, 0666)
+	f, err := os.OpenFile("/etc/img/"+name, os.O_WRONLY|os.O_CREATE, 0666)
+	//f, err := os.OpenFile("/home/nico/"+name, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
