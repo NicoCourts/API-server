@@ -31,7 +31,7 @@ var routes = Routes{
 	},
 	Route{
 		"ListAllPosts",
-		"GET",
+		"POST",
 		"/posts/all/",
 		AllPostIndex,
 	},

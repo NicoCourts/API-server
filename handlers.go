@@ -23,21 +23,19 @@ import (
 var origin string
 
 func init() {
-	// TODO Replace this for production
 	origin = "*"
-	// origin = "https://nicocourts.com"
 }
 
 // Index just welcomes you
 func Index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome to the NicoCourts.com blog API!")
+	fmt.Fprintln(w, "Welcome to the NicoCourts.com API!")
 	fmt.Fprintln(w, "Visit https://api.nicocourts.com/posts for the post list.")
 }
 
 // PostIndex returns a JSON list of all posts
 func PostIndex(w http.ResponseWriter, r *http.Request) {
 
-	// Responsibly declare our content type and return code
+	// Responsibly declare our content type
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", origin)
 	w.WriteHeader(http.StatusOK)
@@ -49,8 +47,27 @@ func PostIndex(w http.ResponseWriter, r *http.Request) {
 
 // AllPostIndex returns a JSON list of all posts (including invisible ones)
 func AllPostIndex(w http.ResponseWriter, r *http.Request) {
+	// Don't allow people to flood our API with data
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1000000))
 
-	// Responsibly declare our content type and return code
+	if err != nil {
+		panic(err)
+	}
+	if err := r.Body.Close(); err != nil {
+		panic(err)
+	}
+
+	type Nothing struct{}
+	var nada Nothing
+
+	if err := Verify(body, &nada); err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		log.Print("Unauthorized Access Attempt")
+		log.Print(err)
+		return
+	}
+
+	// Responsibly declare our content type
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", origin)
 	w.WriteHeader(http.StatusOK)
@@ -65,16 +82,17 @@ func PostShow(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	postID := vars["postID"]
 
-	// Responsibly declare our content type and return code
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", origin)
-
 	p := RepoGetPost(postID)
 	if (p != Post{}) {
-		w.WriteHeader(http.StatusOK)
+		// Responsibly declare our content type
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
 		if err := json.NewEncoder(w).Encode(p); err != nil {
 			panic("Error with JSON encoding")
 		}
+
+		w.WriteHeader(http.StatusOK)
+		return
 	}
 	// Found nothing
 	w.WriteHeader(http.StatusNoContent)
@@ -93,10 +111,6 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.Body.Close(); err != nil {
 		panic(err)
 	}
-
-	// Responsibly declare our content type and return code
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", origin)
 
 	// Refactoring to maximize code reuse
 	var input Input
@@ -131,6 +145,9 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	// Responsibly declare our content type
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 }
 
 // PostDelete deletes the post with the given ID
@@ -144,10 +161,6 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	if err := r.Body.Close(); err != nil {
 		panic(err)
 	}
-
-	// Responsibly declare our content type and return code
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", origin)
 
 	type DelPost struct {
 		ToRemove string
@@ -166,6 +179,9 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusAccepted)
+	// Responsibly declare our content type
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 }
 
 // ImageDelete deletes the post with the given ID
@@ -179,10 +195,6 @@ func ImageDelete(w http.ResponseWriter, r *http.Request) {
 	if err := r.Body.Close(); err != nil {
 		panic(err)
 	}
-
-	// Responsibly declare our content type and return code
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", origin)
 
 	type PicData struct {
 		Filename string
@@ -203,6 +215,9 @@ func ImageDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusAccepted)
+	// Responsibly declare our content type
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 }
 
 // UploadImage takes in some multipart form info representing an image
@@ -221,19 +236,10 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	var img multipart.File
-	var filename string
-	for k, v := range form.File {
-		img, _ = v[0].Open()
-		filename = k
-	}
-
+	img := form.Value["img"][0]
+	filename := form.Value["Filename"][0]
 	Sig := form.Value["Sig"][0]
 	Nonce := form.Value["Nonce"][0]
-
-	// Responsibly declare our content type and return code
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	type Nothing struct{}
 	type SignNothing struct {
@@ -242,7 +248,8 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 		Nonce   string
 	}
 	var nada Nothing
-	blob, _ := json.Marshal(SignNothing{nil, Sig, Nonce})
+	stuff := SignNothing{nil, Sig, Nonce}
+	blob, _ := json.Marshal(stuff)
 
 	if err := Verify(blob, &nada); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -253,12 +260,12 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	// Get new filename
 	h := md5.New()
-	var imgBytes []byte
-	img.Read(imgBytes)
+	imgBytes := []byte(img)
 	h.Sum(imgBytes)
 	checksum := h.Sum(nil)
 
 	name := hex.EncodeToString(checksum) + filepath.Ext(filename)
+	log.Print("Name: " + name)
 
 	// Write the file to disk
 	//f, err := os.OpenFile("/etc/img/"+name, os.O_WRONLY|os.O_CREATE, 0666)
@@ -279,11 +286,13 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 	// Great!
 	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 }
 
 // GetImageList returns a list of currently-available images along with some metadata.
 func GetImageList(w http.ResponseWriter, r *http.Request) {
-	// Responsibly declare our content type and return code
+	// Responsibly declare our content type
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", origin)
 	w.WriteHeader(http.StatusOK)
@@ -295,11 +304,10 @@ func GetImageList(w http.ResponseWriter, r *http.Request) {
 
 // ReadNonce prints out the current nonce to use for authentication
 func ReadNonce(w http.ResponseWriter, r *http.Request) {
-	// Responsibly declare our content type and return code
+	// Responsibly declare our content type
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	// TODO Replace this for production
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	//w.Header().Set("Access-Control-Allow-Origin", "https://nicocourts.com")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+
 	w.WriteHeader(http.StatusOK)
 
 	nonce := CurrentNonce()

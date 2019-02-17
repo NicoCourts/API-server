@@ -19,7 +19,7 @@ var PuKey *rsa.PublicKey
 
 func init() {
 	//pubStr, err := ioutil.ReadFile("/etc/pki/public.pem") //production
-	pubStr, err := ioutil.ReadFile("/home/nico/omfg_lag/pki/public.pem") //dev
+	pubStr, err := ioutil.ReadFile("public.pem") //dev
 	if err != nil {
 		panic("Couldn't open public key file")
 	}
@@ -60,22 +60,26 @@ func Verify(signed []byte, container interface{}) error {
 		return errors.New("nonce verification failed")
 	}
 
-	// Things are looking okay, let's grab the data
-	if data.Payload != nil {
-		if err := json.Unmarshal(data.Payload, container); err != nil {
-			return errors.New("couldn't parse payload")
-		}
-	}
-
 	// Create hash
 	//	Nonce first, then data
 	h := sha512.New()
 	h.Write(nonce)
-	h.Write(data.Payload)
+
+	// Things are looking okay, let's grab the data
+	if data.Payload != nil {
+		var payload []byte
+		base64.StdEncoding.Decode(payload, data.Payload)
+		if payload != nil {
+			if err := json.Unmarshal(payload, container); err != nil {
+				log.Print(err)
+				return errors.New("couldn't parse payload")
+			}
+			h.Write(data.Payload)
+		}
+	}
 
 	// Get that hash
 	hash := h.Sum(nil)
-	//log.Print(hash)
 
 	// Verify signature
 	sig, _ := base64.StdEncoding.DecodeString(data.Sig)

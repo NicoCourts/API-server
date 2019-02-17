@@ -16,7 +16,7 @@ import (
 
 func TestPostCreate(t *testing.T) {
 	// Get Nonce
-	res, err := http.Get("http://127.0.0.1:8080/nonce/")
+	res, err := http.Get("http://localhost:8080/nonce/")
 	if err != nil {
 		t.Error("Cannot get nonce")
 	}
@@ -34,20 +34,19 @@ func TestPostCreate(t *testing.T) {
 
 	// Create dummy Input
 	input := Input{
-		Title:   "The Inserted Post's;",
+		Title:   "The Inserted Post's Here;",
 		Body:    "This will be the body but I don't want to have to worry about html at the moment",
 		IsShort: false,
 	}
 
 	// Compute Hash
 	h := sha512.New()
-	h.Write(nonce.Value)
-	h.Write([]byte(input.Title))
-	h.Write([]byte(input.Body))
+	inputBytes, _ := json.Marshal(input)
+	h.Write(append(nonce.Value, inputBytes...))
 	hash := h.Sum(nil)
 
 	// Sign the hash
-	prStr, err := ioutil.ReadFile("/etc/pki/private.pem") //production
+	prStr, err := ioutil.ReadFile("private.pem") //production
 	//prStr, err := ioutil.ReadFile("/home/nico/omfg_lag/pki/private.pem") //dev
 	if err != nil {
 		t.Error("Couldn't load private key.")
@@ -79,5 +78,4 @@ func TestPostCreate(t *testing.T) {
 	req, err := http.NewRequest("POST", "http://localhost:8080/post/", bytes.NewReader(j))
 	var c http.Client
 	res, err = c.Do(req)
-
 }
