@@ -320,7 +320,7 @@ func RepoCreateRSVP(rescode string, name string, inv int) Rsvp {
 	// Create rsvp
 	rsvp := Rsvp{
 		ID:         h.Sum32(),
-		Name:       name,
+		Name:       "name",
 		ShortCode:  rescode,
 		Attending:  false,
 		NumInvited: inv,
