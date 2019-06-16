@@ -22,22 +22,16 @@ var currentID int
 func init() {
 	//Code for providing test data
 
-	/*p := Post{
-		ID:       1234,
-		Title:    "This is a sample post.",
-		URLTitle: "this-is-a-sample-post-1",
-		Body: "<p>I am wanting to provide a longer post this time. In particular I want line breaks and " +
-			"eventually to constrain the number of words that will appear in the preview.</p><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ipsum elit, consectetur eget ex eget, aliquet bibendum quam. Sed accumsan, leo vitae lobortis mollis, metus ante tempor enim, vel mollis lectus nisl eu erat. Mauris lorem ipsum, accumsan sit amet est aliquet, lobortis hendrerit elit. Suspendisse potenti. Fusce ac diam et ante lobortis rhoncus vehicula ac dolor. Phasellus porttitor, arcu at mollis faucibus, dui lacus vestibulum nisi, ut consectetur leo mi laoreet justo. Aenean rhoncus eget mi vitae tincidunt. Duis vitae ex quis massa tincidunt mollis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Curabitur vel urna eget sapien pharetra commodo. Nullam maximus massa vitae enim gravida maximus. Maecenas tempus tortor fermentum quam viverra, vel iaculis dolor consequat. Vestibulum a ex vitae augue mollis condimentum. Ut finibus leo magna, non aliquet nulla hendrerit a. Vestibulum sagittis ut turpis sed iaculis.</p>",
-		Date:    time.Now(),
-		Visible: true,
-		IsShort: false,
+	r := Rsvp{
+		ID:         12345,
+		ShortCode:  "ABCD",
+		Attending:  true,
+		NumInvited: 4,
+		MonConfirm: 2,
+		SunConfirm: 3,
 	}
-
-	req, _ := http.NewRequest("GET", "/post/", nil)
-	RepoCreatePost(p, req)
-
-	RepoDestroyPost("632867513")
-	*/
+	req, _ := http.NewRequest("POST", "/rsvp/", nil)
+	RepoCreateRSVP(r, req)
 }
 
 // RepoCreatePost adds a new post to our data store.
@@ -258,4 +252,78 @@ func databaseHelper(c1 chan *mgo.Collection, mux *sync.Mutex, table ...string) {
 	c1 <- conn
 	// Wait for the mutex to unlock before quitting
 	mux.Lock()
+}
+
+/////////////////////////////////////////////////////////////
+
+// databaseHelperRSVP does the work of opening the database
+func databaseHelperRSVP(c1 chan *mgo.Collection, mux *sync.Mutex, table ...string) {
+	//Parse optional argument
+	if len(table) == 0 {
+		table = append(table, "posts")
+	}
+
+	//Set up DB connection
+	session, err := mgo.Dial("mongodb:27017") //production
+	//session, err := mgo.Dial("localhost:27017") //dev
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	// Choose database and collection
+	conn := session.DB("rsvpDB").C(table[0])
+
+	// Send back connection.
+	c1 <- conn
+	// Wait for the mutex to unlock before quitting
+	mux.Lock()
+}
+
+// RepoGetRSVP returns the post for the given ID (if one exists). If
+//	not, return a blank post.
+func RepoGetRSVP(rescode string) Rsvp {
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelperRSVP(ch1, &mux)
+	c := <-ch1
+
+	var rsvp Rsvp
+	err := c.Find(bson.M{"rescode": rescode}).One(&rsvp)
+	if err != nil {
+		log.Print("Post not found!")
+		return Rsvp{}
+	}
+
+	return rsvp
+}
+
+// RepoCreateRSVP adds a new RSVP to our data store.
+func RepoCreateRSVP(rsvp Rsvp, r *http.Request) Rsvp {
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelperRSVP(ch1, &mux)
+	c := <-ch1
+
+	// Insert rsvp
+	err := c.Insert(rsvp)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return rsvp
 }

@@ -83,4 +83,16 @@ var routes = Routes{
 		"/image/{filename}",
 		ImageDelete,
 	},
+	Route{
+		"RsvpFetch",
+		"GET",
+		"/rsvp/{rescode}",
+		GetRSVP,
+	},
+	Route{
+		"RsvpUpdate",
+		"POST",
+		"/rsvp/{rescode}",
+		UpdateRSVP,
+	},
 }
