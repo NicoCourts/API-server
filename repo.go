@@ -377,7 +377,7 @@ func RepoGetRSVPs() []Rsvp {
 	defer mux.Unlock()
 
 	// Open the connection and catch the incoming pointer
-	go databaseHelper(ch1, &mux)
+	go databaseHelperRSVP(ch1, &mux)
 	c := <-ch1
 
 	var rsvps []Rsvp
