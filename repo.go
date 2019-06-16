@@ -310,7 +310,7 @@ func RepoCreateRSVP(rescode string, name string, inv int) Rsvp {
 
 	// Delete the old one
 	// even if I forget to REMOVE THIS, it should be fine.
-	c.Remove(bson.M{"_id": 12345})
+	//c.Remove(bson.M{"_id": 12345})
 
 	// Insert a "random" ID
 	h := xxhash.New32()
@@ -364,4 +364,27 @@ func RepoUpdateRSVP(rescode string, attending string, mon int, sun int) error {
 	}})
 
 	return err
+}
+
+// RepoGetRSVPs does its job
+func RepoGetRSVPs() []Rsvp {
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux)
+	c := <-ch1
+
+	var rsvps []Rsvp
+	err := c.Find(bson.M{}).All(&rsvps)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return rsvps
 }

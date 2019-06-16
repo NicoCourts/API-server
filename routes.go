@@ -101,4 +101,10 @@ var routes = Routes{
 		"/rsvp/new/",
 		CreateRSVP,
 	},
+	Route{
+		"RsvpList",
+		"GET",
+		"/rsvp/list/",
+		ListRSVP,
+	},
 }

@@ -423,3 +423,15 @@ func CreateRSVP(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// ListRSVP does stuff
+func ListRSVP(w http.ResponseWriter, r *http.Request) {
+	// Responsibly declare our content type
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(RepoGetRSVPs()); err != nil {
+		panic(err)
+	}
+}
