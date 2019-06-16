@@ -22,7 +22,7 @@ var currentID int
 func init() {
 	//Code for providing test data
 
-	r := Rsvp{
+	/*r := Rsvp{
 		ID:         12345,
 		ShortCode:  "ABCD",
 		Attending:  true,
@@ -31,7 +31,7 @@ func init() {
 		SunConfirm: 3,
 	}
 	req, _ := http.NewRequest("POST", "/rsvp/", nil)
-	RepoCreateRSVP(r, req)
+	RepoCreateRSVP(r, req)*/
 }
 
 // RepoCreatePost adds a new post to our data store.
@@ -296,7 +296,7 @@ func RepoGetRSVP(rescode string) Rsvp {
 	c := <-ch1
 
 	var rsvp Rsvp
-	err := c.Find(bson.M{"rescode": rescode}).One(&rsvp)
+	err := c.Find(bson.M{"shortcode": rescode}).One(&rsvp)
 	if err != nil {
 		log.Print("Post not found!")
 		return Rsvp{}
