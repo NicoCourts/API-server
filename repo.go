@@ -317,10 +317,13 @@ func RepoCreateRSVP(rescode string, name string, inv int) Rsvp {
 	h.Write([]byte(name))
 	h.Write([]byte(time.Now().String()))
 
+	// JUST ONCE: clear the old posts
+	c.RemoveAll(nil)
+
 	// Create rsvp
 	rsvp := Rsvp{
 		ID:         h.Sum32(),
-		Name:       "name",
+		Name:       name,
 		ShortCode:  rescode,
 		Attending:  false,
 		NumInvited: inv,
