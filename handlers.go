@@ -336,9 +336,23 @@ func NonceUpdate(w http.ResponseWriter, r *http.Request) {
 // GetRSVP looks up an RSVP given a reservation code and returns
 //	the current information we have on it.
 func GetRSVP(w http.ResponseWriter, r *http.Request) {
-	// Responsibly declare our content type
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", origin)
+	vars := mux.Vars(r)
+	rescode := vars["rescode"]
+
+	rsvp := RepoGetRSVP(rescode)
+	if (rsvp != Rsvp{}) {
+		// Responsibly declare our content type
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		if err := json.NewEncoder(w).Encode(rsvp); err != nil {
+			panic("Error with JSON encoding")
+		}
+
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	// Found nothing
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // UpdateRSVP updates the current RSVP with new information.
