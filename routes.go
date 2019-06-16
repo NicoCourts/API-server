@@ -84,18 +84,6 @@ var routes = Routes{
 		ImageDelete,
 	},
 	Route{
-		"RsvpFetch",
-		"GET",
-		"/rsvp/{rescode}",
-		GetRSVP,
-	},
-	Route{
-		"RsvpUpdate",
-		"POST",
-		"/rsvp/{rescode}",
-		UpdateRSVP,
-	},
-	Route{
 		"RsvpCreate",
 		"POST",
 		"/rsvp/new/",
@@ -106,5 +94,17 @@ var routes = Routes{
 		"GET",
 		"/rsvp/list/",
 		ListRSVP,
+	},
+	Route{
+		"RsvpFetch",
+		"GET",
+		"/rsvp/{rescode}",
+		GetRSVP,
+	},
+	Route{
+		"RsvpUpdate",
+		"POST",
+		"/rsvp/{rescode}",
+		UpdateRSVP,
 	},
 }
