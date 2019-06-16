@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -138,7 +139,7 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 		Date:     time.Now(),
 	}
 
-	p := RepoCreatePost(post, r)
+	p := RepoCreatePost(post)
 	if err := json.NewEncoder(w).Encode(p); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		panic(err)
@@ -357,10 +358,68 @@ func GetRSVP(w http.ResponseWriter, r *http.Request) {
 
 // UpdateRSVP updates the current RSVP with new information.
 func UpdateRSVP(w http.ResponseWriter, r *http.Request) {
-	// Responsibly declare our content type
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", origin)
+	vars := mux.Vars(r)
+	rescode := vars["rescode"]
+	attending := vars["attending"]
+	numinvited := vars["numinvited"]
+	monconfirm := vars["monconfirm"]
+	sunconfirm := vars["sunconfirm"]
 
-	// Placeholder
-	w.WriteHeader(http.StatusOK)
+	// Parse values and make sure it's a valid request.
+	// Don't allow people to reserve more than their allotted spots
+	inv, err := strconv.Atoi(numinvited)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	mon, err := strconv.Atoi(monconfirm)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	sun, err := strconv.Atoi(sunconfirm)
+	if err != nil || inv < mon || inv < sun {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = RepoUpdateRSVP(rescode, attending, mon, sun)
+	if err != nil {
+		// Responsibly declare our content type
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// CreateRSVP creates one!
+func CreateRSVP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+	numinvited := vars["numinvited"]
+	rescode := vars["rescode"]
+
+	inv, err := strconv.Atoi(numinvited)
+	if err == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	rsvp := RepoCreateRSVP(rescode, name, inv)
+	if (rsvp != Rsvp{}) {
+		// Responsibly declare our content type
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		if err := json.NewEncoder(w).Encode(rsvp); err != nil {
+			panic("Error with JSON encoding")
+		}
+
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

@@ -95,4 +95,10 @@ var routes = Routes{
 		"/rsvp/{rescode}",
 		UpdateRSVP,
 	},
+	Route{
+		"RsvpCreate",
+		"POST",
+		"/rsvp/new/",
+		CreateRSVP,
+	},
 }

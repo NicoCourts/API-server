@@ -4,6 +4,7 @@ package main
 type Rsvp struct {
 	ID         uint32 `json:"_id"`
 	ShortCode  string `json:"shortcode"`
+	Name       string `json:"name"`
 	Attending  bool   `json:"attending"`
 	NumInvited int    `json:"numinvited"`
 	MonConfirm int    `json:"monconfirm"`

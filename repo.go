@@ -7,7 +7,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"strconv"
 	"sync"
 	"time"
@@ -21,21 +20,11 @@ var currentID int
 
 func init() {
 	//Code for providing test data
-
-	/*r := Rsvp{
-		ID:         12345,
-		ShortCode:  "ABCD",
-		Attending:  true,
-		NumInvited: 4,
-		MonConfirm: 2,
-		SunConfirm: 3,
-	}
-	req, _ := http.NewRequest("POST", "/rsvp/", nil)
-	RepoCreateRSVP(r, req)*/
+	RepoCreateRSVP("ABCD", "Sparx & Coco", 2)
 }
 
 // RepoCreatePost adds a new post to our data store.
-func RepoCreatePost(post Post, r *http.Request) Post {
+func RepoCreatePost(post Post) Post {
 	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
 	var mux sync.Mutex
@@ -306,7 +295,7 @@ func RepoGetRSVP(rescode string) Rsvp {
 }
 
 // RepoCreateRSVP adds a new RSVP to our data store.
-func RepoCreateRSVP(rsvp Rsvp, r *http.Request) Rsvp {
+func RepoCreateRSVP(rescode string, name string, inv int) Rsvp {
 	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
 	var mux sync.Mutex
@@ -319,6 +308,26 @@ func RepoCreateRSVP(rsvp Rsvp, r *http.Request) Rsvp {
 	go databaseHelperRSVP(ch1, &mux)
 	c := <-ch1
 
+	// Delete the old one
+	// even if I forget to REMOVE THIS, it should be fine.
+	c.Remove(bson.M{"_id": 12345})
+
+	// Insert a "random" ID
+	h := xxhash.New32()
+	h.Write([]byte(name))
+	h.Write([]byte(time.Now().String()))
+
+	// Create rsvp
+	rsvp := Rsvp{
+		ID:         h.Sum32(),
+		Name:       name,
+		ShortCode:  rescode,
+		Attending:  false,
+		NumInvited: inv,
+		MonConfirm: 0,
+		SunConfirm: 0,
+	}
+
 	// Insert rsvp
 	err := c.Insert(rsvp)
 	if err != nil {
@@ -326,4 +335,33 @@ func RepoCreateRSVP(rsvp Rsvp, r *http.Request) Rsvp {
 	}
 
 	return rsvp
+}
+
+// RepoUpdateRSVP updates an RSVP
+func RepoUpdateRSVP(rescode string, attending string, mon int, sun int) error {
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux)
+	c := <-ch1
+
+	// Find post, if it exists
+	var rsvp Rsvp
+	err := c.Find(bson.M{"shortcode": rescode}).One(&rsvp)
+
+	// Update values
+	att := (attending == "true")
+	err = c.Update(rsvp, bson.M{"$set": bson.M{
+		"attending":  att,
+		"monconfirm": mon,
+		"sunconfirm": sun,
+	}})
+
+	return err
 }
