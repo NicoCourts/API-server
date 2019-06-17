@@ -20,7 +20,7 @@ var currentID int
 
 func init() {
 	//Code for providing test data
-	RepoCreateRSVP("ABCD", "Sparx & Coco", 2)
+	//RepoCreateRSVP("ABCD", "Sparx & Coco", 2)
 }
 
 // RepoCreatePost adds a new post to our data store.
@@ -308,17 +308,10 @@ func RepoCreateRSVP(rescode string, name string, inv int) Rsvp {
 	go databaseHelperRSVP(ch1, &mux)
 	c := <-ch1
 
-	// Delete the old one
-	// even if I forget to REMOVE THIS, it should be fine.
-	//c.Remove(bson.M{"_id": 12345})
-
 	// Insert a "random" ID
 	h := xxhash.New32()
 	h.Write([]byte(name))
 	h.Write([]byte(time.Now().String()))
-
-	// JUST ONCE: clear the old posts
-	c.RemoveAll(nil)
 
 	// Create rsvp
 	rsvp := Rsvp{
