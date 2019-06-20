@@ -374,7 +374,7 @@ func UpdateRSVP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get POST variables
-	if err := r.ParseForm; err != nil {
+	if err := r.ParseForm(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Print(err)
 		return
