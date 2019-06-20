@@ -365,6 +365,10 @@ func UpdateRSVP(w http.ResponseWriter, r *http.Request) {
 	monconfirm := vars["monconfirm"]
 	sunconfirm := vars["sunconfirm"]
 
+	// Responsibly declare our content type
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+
 	// Parse values and make sure it's a valid request.
 	// Don't allow people to reserve more than their allotted spots
 	inv, err := strconv.Atoi(numinvited)
@@ -385,9 +389,6 @@ func UpdateRSVP(w http.ResponseWriter, r *http.Request) {
 
 	err = RepoUpdateRSVP(rescode, attending, mon, sun)
 	if err != nil {
-		// Responsibly declare our content type
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
