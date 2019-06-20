@@ -337,14 +337,15 @@ func NonceUpdate(w http.ResponseWriter, r *http.Request) {
 // GetRSVP looks up an RSVP given a reservation code and returns
 //	the current information we have on it.
 func GetRSVP(w http.ResponseWriter, r *http.Request) {
+	// Responsibly declare our content type
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+
 	vars := mux.Vars(r)
 	rescode := vars["rescode"]
 
 	rsvp := RepoGetRSVP(rescode)
 	if (rsvp != Rsvp{}) {
-		// Responsibly declare our content type
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.Header().Set("Access-Control-Allow-Origin", origin)
 		if err := json.NewEncoder(w).Encode(rsvp); err != nil {
 			panic("Error with JSON encoding")
 		}
@@ -413,10 +414,15 @@ func UpdateRSVP(w http.ResponseWriter, r *http.Request) {
 
 // CreateRSVP creates one!
 func CreateRSVP(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
-	numinvited := vars["numinvited"]
-	rescode := vars["rescode"]
+	// Get POST variables
+	if err := r.ParseForm(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Print(err)
+		return
+	}
+	name := r.FormValue("name")
+	numinvited := r.FormValue("numinvited")
+	rescode := r.FormValue("rescode")
 
 	inv, err := strconv.Atoi(numinvited)
 	if err == nil {
