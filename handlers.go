@@ -358,24 +358,33 @@ func GetRSVP(w http.ResponseWriter, r *http.Request) {
 
 // UpdateRSVP updates the current RSVP with new information.
 func UpdateRSVP(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	rescode := vars["rescode"]
-	attending := vars["attending"]
-	numinvited := vars["numinvited"]
-	monconfirm := vars["monconfirm"]
-	sunconfirm := vars["sunconfirm"]
-
 	// Responsibly declare our content type
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", origin)
 
-	// Parse values and make sure it's a valid request.
-	// Don't allow people to reserve more than their allotted spots
-	inv, err := strconv.Atoi(numinvited)
-	if err != nil {
+	vars := mux.Vars(r)
+	rescode := vars["rescode"]
+
+	// Get data from the database
+	currRSVP := RepoGetRSVP(rescode)
+	if (currRSVP == Rsvp{}) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	// Get POST variables
+	if err := r.ParseForm; err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	attending := r.FormValue("attending")
+	inv := currRSVP.NumInvited
+	monconfirm := r.FormValue("monconfirm")
+	sunconfirm := r.FormValue("sunconfirm")
+
+	// Parse values and make sure it's a valid request.
+	// Don't allow people to reserve more than their allotted spots
 	mon, err := strconv.Atoi(monconfirm)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
