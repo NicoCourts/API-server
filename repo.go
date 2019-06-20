@@ -351,9 +351,11 @@ func RepoUpdateRSVP(rescode string, attending string, mon int, sun int) error {
 	att := (attending == "true")
 	err := c.Update(bson.M{"shortcode": rescode}, bson.M{"$set": bson.M{
 		"attending":  att,
+		"updated":    true,
 		"monconfirm": mon,
 		"sunconfirm": sun,
 	}})
+
 	if err != nil {
 		log.Print("Update failed")
 		log.Print("I tried to look up " + rescode)
