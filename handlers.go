@@ -93,10 +93,9 @@ func PostShow(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		return
+	} else {
+		w.WriteHeader(http.StatusNoContent)
 	}
-	// Found nothing
-	w.WriteHeader(http.StatusNoContent)
 }
 
 // PostCreate inserts a new post into the repo. Requests will be JSON of
@@ -351,10 +350,9 @@ func GetRSVP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		return
+	} else {
+		w.WriteHeader(http.StatusNoContent)
 	}
-	// Found nothing
-	w.WriteHeader(http.StatusNoContent)
 }
 
 // UpdateRSVP updates the current RSVP with new information.
@@ -405,11 +403,10 @@ func UpdateRSVP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusOK)
 		log.Print(err)
-		return
+	} else {
+		w.WriteHeader(http.StatusNoContent)
+		log.Print("Oh no.")
 	}
-
-	w.WriteHeader(http.StatusNoContent)
-	log.Print("Oh no.")
 }
 
 // CreateRSVP creates one!
@@ -440,10 +437,9 @@ func CreateRSVP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		return
+	} else {
+		w.WriteHeader(http.StatusNoContent)
 	}
-
-	w.WriteHeader(http.StatusNoContent)
 }
 
 // ListRSVP does stuff

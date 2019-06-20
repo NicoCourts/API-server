@@ -356,6 +356,7 @@ func RepoUpdateRSVP(rescode string, attending string, mon int, sun int) error {
 	}})
 	if err != nil {
 		log.Print("Update failed")
+		log.Print("I tried to look up " + rescode)
 	}
 
 	return err
