@@ -422,7 +422,7 @@ func CreateRSVP(w http.ResponseWriter, r *http.Request) {
 	rescode := r.FormValue("rescode")
 
 	inv, err := strconv.Atoi(numinvited)
-	if err == nil {
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Print("Couldn't convert numinvited")
 		log.Print(err)
