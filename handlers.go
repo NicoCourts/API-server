@@ -369,12 +369,14 @@ func UpdateRSVP(w http.ResponseWriter, r *http.Request) {
 	currRSVP := RepoGetRSVP(rescode)
 	if (currRSVP == Rsvp{}) {
 		w.WriteHeader(http.StatusBadRequest)
+		log.Print("RSVP not found!")
 		return
 	}
 
 	// Get POST variables
 	if err := r.ParseForm; err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		log.Print(err)
 		return
 	}
 
@@ -388,21 +390,25 @@ func UpdateRSVP(w http.ResponseWriter, r *http.Request) {
 	mon, err := strconv.Atoi(monconfirm)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		log.Print(err)
 		return
 	}
 	sun, err := strconv.Atoi(sunconfirm)
 	if err != nil || inv < mon || inv < sun {
 		w.WriteHeader(http.StatusBadRequest)
+		log.Print(err)
 		return
 	}
 
 	err = RepoUpdateRSVP(rescode, attending, mon, sun)
 	if err != nil {
 		w.WriteHeader(http.StatusOK)
+		log.Print(err)
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+	log.Print("Oh no.")
 }
 
 // CreateRSVP creates one!
