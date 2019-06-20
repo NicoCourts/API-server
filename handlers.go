@@ -425,6 +425,7 @@ func CreateRSVP(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Print("Couldn't convert numinvited")
+		log.Print(err)
 		return
 	}
 
