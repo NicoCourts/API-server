@@ -347,9 +347,14 @@ func RepoUpdateRSVP(rescode string, attending string, mon int, sun int) error {
 	go databaseHelper(ch1, &mux)
 	c := <-ch1
 
+	// Lets see wtf is happening
+	var rsvp Rsvp
+	err := c.Find(bson.M{"shortcode": rescode}).One(&rsvp)
+	log.Print(rsvp)
+
 	// Update values
 	att := (attending == "true")
-	err := c.Update(bson.M{"shortcode": rescode}, bson.M{"$set": bson.M{
+	err = c.Update(bson.M{"shortcode": rescode}, bson.M{"$set": bson.M{
 		"attending":  att,
 		"monconfirm": mon,
 		"sunconfirm": sun,
