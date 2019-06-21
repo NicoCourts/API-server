@@ -409,7 +409,7 @@ func UpdateRSVP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// CreateRSVP creates one!
+/*// CreateRSVP creates one!
 func CreateRSVP(w http.ResponseWriter, r *http.Request) {
 	// Get POST variables
 	if err := r.ParseForm(); err != nil {
@@ -454,4 +454,4 @@ func ListRSVP(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(RepoGetRSVPs()); err != nil {
 		panic(err)
 	}
-}
+}*/

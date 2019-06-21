@@ -294,7 +294,7 @@ func RepoGetRSVP(rescode string) Rsvp {
 	return rsvp
 }
 
-// RepoCreateRSVP adds a new RSVP to our data store.
+/*// RepoCreateRSVP adds a new RSVP to our data store.
 func RepoCreateRSVP(rescode string, name string, inv int) Rsvp {
 	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
@@ -331,7 +331,7 @@ func RepoCreateRSVP(rescode string, name string, inv int) Rsvp {
 	}
 
 	return rsvp
-}
+}*/
 
 // RepoUpdateRSVP updates an RSVP
 func RepoUpdateRSVP(rescode string, attending string, mon int, sun int) error {
@@ -364,7 +364,7 @@ func RepoUpdateRSVP(rescode string, attending string, mon int, sun int) error {
 	return err
 }
 
-// RepoGetRSVPs does its job
+/*// RepoGetRSVPs does its job
 func RepoGetRSVPs() []Rsvp {
 	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
@@ -384,7 +384,5 @@ func RepoGetRSVPs() []Rsvp {
 		log.Fatal(err)
 	}
 
-	c.RemoveAll(bson.M{})
-
 	return rsvps
-}
+}*/
