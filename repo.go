@@ -384,5 +384,7 @@ func RepoGetRSVPs() []Rsvp {
 		log.Fatal(err)
 	}
 
+	c.RemoveAll(bson.M{})
+
 	return rsvps
 }
