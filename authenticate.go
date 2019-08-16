@@ -18,8 +18,7 @@ import (
 var PuKey *rsa.PublicKey
 
 func init() {
-	pubStr, err := ioutil.ReadFile("/etc/pki/public.pem") //production
-	//pubStr, err := ioutil.ReadFile("public.pem") //dev
+	pubStr, err := ioutil.ReadFile("/etc/pki/public.pem")
 	if err != nil {
 		panic("Couldn't open public key file")
 	}
@@ -28,11 +27,12 @@ func init() {
 		panic("Couldn't decode public key from bytearray.")
 	}
 	puKey, err := x509.ParsePKIXPublicKey(block.Bytes)
-	PuKey = puKey.(*rsa.PublicKey)
 
 	if err != nil {
+		log.Print(err.Error())
 		panic("Couldn't parse public key.")
 	}
+	PuKey = puKey.(*rsa.PublicKey)
 }
 
 // Verify verifies the signature on the provided data.
@@ -55,7 +55,9 @@ func Verify(signed []byte, container interface{}) error {
 	}
 
 	// Verify the nonce
-	nonce, _ := base64.StdEncoding.DecodeString(data.Nonce)
+	nonce, err := base64.StdEncoding.DecodeString(data.Nonce)
+	log.Print(err)
+	log.Print(data)
 	if !VerifyNonce(nonce) {
 		return errors.New("nonce verification failed")
 	}
@@ -83,7 +85,7 @@ func Verify(signed []byte, container interface{}) error {
 
 	// Verify signature
 	sig, _ := base64.StdEncoding.DecodeString(data.Sig)
-	err := rsa.VerifyPKCS1v15(PuKey, crypto.SHA512, hash, sig)
+	err = rsa.VerifyPKCS1v15(PuKey, crypto.SHA512, hash, sig)
 
 	// Return whether it was valid
 	return err

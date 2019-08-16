@@ -227,8 +227,11 @@ func databaseHelper(c1 chan *mgo.Collection, mux *sync.Mutex, table ...string) {
 	}
 
 	//Set up DB connection
-	session, err := mgo.Dial("mongodb:27017") //production
-	//session, err := mgo.Dial("localhost:27017") //dev
+	s := "mongodb:27017"
+	if devmode {
+		s = "localhost:27017" //dev
+	}
+	session, err := mgo.Dial(s) //production
 	if err != nil {
 		panic(err)
 	}
@@ -253,8 +256,12 @@ func databaseHelperRSVP(c1 chan *mgo.Collection, mux *sync.Mutex, table ...strin
 	}
 
 	//Set up DB connection
-	session, err := mgo.Dial("mongodb:27017") //production
-	//session, err := mgo.Dial("localhost:27017") //dev
+	s := "mongodb:27017"
+	if devmode {
+		s = "localhost:27017" //dev
+	}
+	session, err := mgo.Dial(s) //production
+
 	if err != nil {
 		panic(err)
 	}
