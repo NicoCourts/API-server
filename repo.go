@@ -110,13 +110,17 @@ func RepoDestroyPost(postID string) error {
 	}
 
 	// Toggle visibility
-	err = c.Update(post, bson.M{"$set": bson.M{"visible": false}})
+	if post.Visible {
+		err = c.Update(post, bson.M{"$set": bson.M{"visible": false}})
+	} else {
+		err = c.Update(post, bson.M{"$set": bson.M{"visible": true}})
+	}
+
 	if err != nil {
 		return fmt.Errorf("Could not update post")
 	}
 
 	return nil
-
 }
 
 // RepoGetVisiblePosts returns a list of all visible posts (publc)

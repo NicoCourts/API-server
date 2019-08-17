@@ -161,18 +161,17 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	if err := r.Body.Close(); err != nil {
 		panic(err)
 	}
+	postID := mux.Vars(r)["postID"]
 
-	type DelPost struct {
-		ToRemove string
-	}
-	var in DelPost
-	if err := Verify(body, &in); err != nil {
+	type Nothing struct{}
+	var nada Nothing
+	if err := Verify(body, &nada); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Print("Unauthorized Access Attempt")
 		return
 	}
 
-	if err := RepoDestroyPost(in.ToRemove); err != nil {
+	if err := RepoDestroyPost(postID); err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"crypto/rand"
-	"encoding/base64"
 	"log"
 	"time"
 )
@@ -46,9 +45,7 @@ func CurrentNonce() Nonce {
 func VerifyNonce(in []byte) bool {
 	// Update the nonce after checking for equality
 	defer UpdateNonce()
-	log.Print(base64.StdEncoding.EncodeToString(theNonce.Value))
-	log.Print(in)
-	log.Print(theNonce.Value)
+
 	return bytes.Equal(in, theNonce.Value)
 }
 

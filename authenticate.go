@@ -56,8 +56,6 @@ func Verify(signed []byte, container interface{}) error {
 
 	// Verify the nonce
 	nonce, err := base64.StdEncoding.DecodeString(data.Nonce)
-	log.Print(err)
-	log.Print(data)
 	if !VerifyNonce(nonce) {
 		return errors.New("nonce verification failed")
 	}

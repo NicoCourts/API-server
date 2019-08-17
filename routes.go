@@ -49,8 +49,8 @@ var routes = Routes{
 	},
 	Route{
 		"PostDelete",
-		"DELETE",
-		"/post/{postID}",
+		"POST",
+		"/post/toggle/{postID}",
 		PostDelete,
 	},
 	Route{
