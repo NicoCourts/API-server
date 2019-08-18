@@ -48,10 +48,10 @@ var routes = Routes{
 		PostCreate,
 	},
 	Route{
-		"PostDelete",
+		"ToggleVisibility",
 		"POST",
 		"/post/toggle/{postID}",
-		PostDelete,
+		PostToggle,
 	},
 	Route{
 		"ReadNonce",

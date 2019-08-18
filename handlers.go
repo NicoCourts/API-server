@@ -86,13 +86,13 @@ func PostShow(w http.ResponseWriter, r *http.Request) {
 	p := RepoGetPost(postID)
 	if (p != Post{}) {
 		// Responsibly declare our content type
+		w.WriteHeader(http.StatusOK)
+
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		if err := json.NewEncoder(w).Encode(p); err != nil {
 			panic("Error with JSON encoding")
 		}
-
-		w.WriteHeader(http.StatusOK)
 	} else {
 		w.WriteHeader(http.StatusNoContent)
 	}
@@ -150,8 +150,8 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", origin)
 }
 
-// PostDelete deletes the post with the given ID
-func PostDelete(w http.ResponseWriter, r *http.Request) {
+// PostToggle toggles a post's visibility
+func PostToggle(w http.ResponseWriter, r *http.Request) {
 	// Don't allow people to flood our API with data
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1000000))
 

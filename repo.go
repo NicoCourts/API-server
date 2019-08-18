@@ -77,7 +77,7 @@ func RepoGetPost(urltitle string) Post {
 
 	var post Post
 	err := c.Find(bson.M{"urltitle": urltitle}).One(&post)
-	if err != nil {
+	if err != nil || !post.Visible {
 		log.Print("Post not found!")
 		return Post{}
 	}
