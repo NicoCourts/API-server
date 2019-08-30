@@ -55,7 +55,7 @@ func Verify(signed []byte, container interface{}) error {
 	}
 
 	// Verify the nonce
-	nonce, err := base64.StdEncoding.DecodeString(data.Nonce)
+	nonce, _ := base64.StdEncoding.DecodeString(data.Nonce)
 	if !VerifyNonce(nonce) {
 		return errors.New("nonce verification failed")
 	}
@@ -68,9 +68,15 @@ func Verify(signed []byte, container interface{}) error {
 	// Things are looking okay, let's grab the data
 	if data.Payload != nil {
 		var payload []byte
-		base64.StdEncoding.Decode(payload, data.Payload)
-		if payload != nil {
-			if err := json.Unmarshal(payload, container); err != nil {
+
+		//if _, err := base64.StdEncoding.Decode(payload, data.Payload); err != nil {
+		//	log.Print("Couldn't decode payload")
+		//	log.Print(data.Payload)
+		//	log.Print(err)
+		//}
+
+		if string(payload) != string(data.Payload) {
+			if err := json.Unmarshal(data.Payload, container); err != nil {
 				log.Print(err)
 				return errors.New("couldn't parse payload")
 			}
@@ -83,7 +89,7 @@ func Verify(signed []byte, container interface{}) error {
 
 	// Verify signature
 	sig, _ := base64.StdEncoding.DecodeString(data.Sig)
-	err = rsa.VerifyPKCS1v15(PuKey, crypto.SHA512, hash, sig)
+	err := rsa.VerifyPKCS1v15(PuKey, crypto.SHA512, hash, sig)
 
 	// Return whether it was valid
 	return err

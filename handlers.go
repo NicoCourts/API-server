@@ -127,13 +127,17 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 	if len(urlTitle) > 35 {
 		urlTitle = urlTitle[:35]
 	}
+	// change urltitle if it already exists
+	for RepoURLTitleExists(urlTitle) {
+		urlTitle += "0"
+	}
 
 	// We've confirmed authenticity at this point. Prepare post for insertion.
 	post := Post{
 		Title:    input.Title,
 		URLTitle: urlTitle,
 		Body:     input.Body,
-		IsShort:  input.IsShort,
+		Markdown: input.Markdown,
 		Visible:  true,
 		Date:     time.Now(),
 	}
@@ -148,6 +152,39 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 	// Responsibly declare our content type
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", origin)
+}
+
+// PostUpdate updates the title and content of a currently-existing post.
+func PostUpdate(w http.ResponseWriter, r *http.Request) {
+	// Don't allow people to flood our API with data
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1000000))
+
+	if err != nil {
+		panic(err)
+	}
+	if err := r.Body.Close(); err != nil {
+		panic(err)
+	}
+	postID := mux.Vars(r)["postID"]
+
+	var input Input
+	if err := Verify(body, &input); err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		log.Print("Unauthorized Access Attempt")
+		log.Print(err)
+		return
+	}
+
+	if err := RepoUpdatePost(postID, input); err != nil {
+		log.Print("Problem Updating Post")
+		log.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	//Responsibly declare our content type
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.WriteHeader(http.StatusOK)
 }
 
 // PostToggle toggles a post's visibility
@@ -171,16 +208,18 @@ func PostToggle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := RepoDestroyPost(postID); err != nil {
+	if err := RepoTogglePost(postID); err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
+		log.Print(err)
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
 		}
+	} else {
+		// Responsibly declare our content type
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.WriteHeader(http.StatusAccepted)
 	}
-	w.WriteHeader(http.StatusAccepted)
-	// Responsibly declare our content type
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", origin)
 }
 
 // ImageDelete deletes the post with the given ID

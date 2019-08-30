@@ -48,6 +48,12 @@ var routes = Routes{
 		PostCreate,
 	},
 	Route{
+		"PostUpdate",
+		"POST",
+		"/post/{postID}",
+		PostUpdate,
+	},
+	Route{
 		"ToggleVisibility",
 		"POST",
 		"/post/toggle/{postID}",

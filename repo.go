@@ -50,6 +50,65 @@ func RepoCreatePost(post Post) Post {
 	return post
 }
 
+// RepoUpdatePost updates the title and body in the database
+func RepoUpdatePost(postID string, post Input) error {
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux)
+	c := <-ch1
+
+	// Find post, if it exists
+	var result Post
+	id, _ := strconv.Atoi(postID)
+	if err := c.Find(bson.M{"id": id}).One(&result); err != nil {
+		log.Print("Couldn't extract post from DB")
+		log.Print(err)
+	}
+	var e Post
+
+	if result == e {
+		return fmt.Errorf("Could not find Post with ID of %s to update", postID)
+	}
+
+	// Update Values
+	if err := c.Update(result,
+		bson.M{"$set": bson.M{
+			"body":     post.Body,
+			"markdown": post.Markdown,
+			"title":    post.Title,
+		}}); err != nil {
+		log.Print("Could not update post")
+		return err
+	}
+
+	return nil
+}
+
+// RepoURLTitleExists checks if a urltitle is already in use and returns a boolean to that effect.
+func RepoURLTitleExists(urlTitle string) bool {
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux)
+	c := <-ch1
+
+	count, _ := c.Find(bson.M{"urltitle": urlTitle}).Count()
+	return count >= 1
+}
+
 // getNextID returns the ID for a post added at this moment.
 func getNextID(title string, date time.Time) uint32 {
 	// hash the (url-safe) title and the time together using a fast hash
@@ -85,8 +144,8 @@ func RepoGetPost(urltitle string) Post {
 	return post
 }
 
-// RepoDestroyPost deletes (disables, actually) a post.
-func RepoDestroyPost(postID string) error {
+// RepoTogglePost toggles visibility of a post.
+func RepoTogglePost(postID string) error {
 	// Create channel and mutex
 	ch1 := make(chan *mgo.Collection)
 	var mux sync.Mutex
@@ -102,7 +161,9 @@ func RepoDestroyPost(postID string) error {
 	// Find post, if it exists
 	var post Post
 	id, _ := strconv.Atoi(postID)
-	err := c.Find(bson.M{"id": id}).One(&post)
+	if err := c.Find(bson.M{"id": id}).One(&post); err != nil {
+		log.Print(err)
+	}
 	var e Post
 
 	if post == e {
@@ -110,13 +171,8 @@ func RepoDestroyPost(postID string) error {
 	}
 
 	// Toggle visibility
-	if post.Visible {
-		err = c.Update(post, bson.M{"$set": bson.M{"visible": false}})
-	} else {
-		err = c.Update(post, bson.M{"$set": bson.M{"visible": true}})
-	}
-
-	if err != nil {
+	if err := c.Update(post, bson.M{"$set": bson.M{"visible": !post.Visible}}); err != nil {
+		log.Print(err)
 		return fmt.Errorf("Could not update post")
 	}
 

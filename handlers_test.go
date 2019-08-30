@@ -34,9 +34,8 @@ func TestPostCreate(t *testing.T) {
 
 	// Create dummy Input
 	input := Input{
-		Title:   "The Inserted Post's Here;",
-		Body:    "This will be the body but I don't want to have to worry about html at the moment",
-		IsShort: false,
+		Title: "The Inserted Post's Here;",
+		Body:  "This will be the body but I don't want to have to worry about html at the moment",
 	}
 
 	// Compute Hash
