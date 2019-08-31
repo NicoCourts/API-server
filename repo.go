@@ -35,7 +35,7 @@ func init() {
 	go databaseHelper(ch1, &mux)
 	c := <-ch1
 
-	if _, err := c.UpdateAll(bson.M{}, bson.M{"markdown": ""}); err != nil {
+	if _, err := c.UpdateAll(bson.M{}, bson.M{"$set": bson.M{"markdown": ""}}); err != nil {
 		log.Print(err)
 	}
 }
