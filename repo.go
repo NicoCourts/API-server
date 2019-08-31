@@ -21,6 +21,23 @@ var currentID int
 func init() {
 	//Code for providing test data
 	//RepoCreateRSVP("ABCD", "Sparx & Coco", 2)
+
+	//Update all posts so they now have markdown associated to them
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux)
+	c := <-ch1
+
+	if _, err := c.UpdateAll(bson.M{}, bson.M{"markdown": ""}); err != nil {
+		log.Print(err)
+	}
 }
 
 // RepoCreatePost adds a new post to our data store.
@@ -287,10 +304,9 @@ func databaseHelper(c1 chan *mgo.Collection, mux *sync.Mutex, table ...string) {
 	}
 
 	//Set up DB connection
-	s := "mongodb:27017"
-	//if devmode {
-	//	s = "localhost:27017" //dev
-	//}
+	//s := "mongodb:27017" //prod
+	s := "localhost:27017" //dev
+
 	session, err := mgo.Dial(s)
 	if err != nil {
 		panic(err)
