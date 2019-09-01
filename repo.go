@@ -136,7 +136,6 @@ func RepoGetPost(urltitle string) Post {
 	c := <-ch1
 
 	var post Post
-	log.Print(urltitle)
 	if err := c.Find(bson.M{"urltitle": urltitle}).One(&post); err != nil || !post.Visible {
 		log.Print("Post not found!")
 		log.Print(err)

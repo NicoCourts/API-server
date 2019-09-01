@@ -86,10 +86,9 @@ func PostShow(w http.ResponseWriter, r *http.Request) {
 	p := RepoGetPost(postID)
 	if (p != Post{}) {
 		// Responsibly declare our content type
-		w.WriteHeader(http.StatusOK)
-
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(p); err != nil {
 			panic("Error with JSON encoding")
 		}
