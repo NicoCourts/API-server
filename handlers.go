@@ -311,7 +311,13 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	log.Print(input.Sig)
 	log.Print(input.Img)
 	imgBytes, _ := b64.StdEncoding.DecodeString(input.Img)
+	log.Print(imgBytes)
 	checksum := h.Sum(imgBytes)
+	log.Print(checksum)
+	log.Print([]byte("aaa"))
+	log.Print(h.Sum([]byte("aaa")))
+	log.Print([]byte("bbb"))
+	log.Print(h.Sum([]byte("bbb")))
 
 	name := hex.EncodeToString(checksum) + filepath.Ext(input.Filename)
 	log.Print("Name: " + name)
