@@ -305,16 +305,9 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get new filename
-	h := md5.New()
 	imgBytes, _ := b64.StdEncoding.DecodeString(input.Img)
-
-	checksum := h.Sum(imgBytes)
-	// Debugging the checksum
-	log.Print(checksum)
-	log.Print([]byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
-	log.Print(h.Sum([]byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")))
-	log.Print([]byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbb"))
-	log.Print(h.Sum([]byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbb")))
+	checkBytes := md5.Sum(imgBytes)
+	checksum := checkBytes[:]
 
 	name := hex.EncodeToString(checksum) + filepath.Ext(input.Filename)
 	log.Print("Name: " + name)
