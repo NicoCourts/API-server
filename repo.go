@@ -20,19 +20,7 @@ var currentID int
 
 func init() {
 	// Mess with the DB here
-	// Create channel and mutex
-	ch1 := make(chan *mgo.Collection)
-	var mux sync.Mutex
 
-	// Prepare mutex to hold connection open until we're done with it.
-	mux.Lock()
-	defer mux.Unlock()
-
-	// Open the connection and catch the incoming pointer
-	go databaseHelper(ch1, &mux, "images")
-	c := <-ch1
-
-	c.RemoveAll(bson.M{})
 }
 
 // RepoCreatePost adds a new post to our data store.
