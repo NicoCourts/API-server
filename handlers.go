@@ -311,15 +311,13 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	log.Print(input.Sig)
 	log.Print(input.Img)
 	imgBytes, _ := b64.StdEncoding.DecodeString(input.Img)
-	h.Sum(imgBytes)
-	checksum := h.Sum(nil)
+	checksum := h.Sum(imgBytes)
 
 	name := hex.EncodeToString(checksum) + filepath.Ext(input.Filename)
 	log.Print("Name: " + name)
 
 	// Write the file to disk
 	f, err := os.OpenFile("/etc/img/"+name, os.O_WRONLY|os.O_CREATE, 0666)
-	//f, err := os.OpenFile("/home/nico/"+name, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
