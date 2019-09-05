@@ -18,6 +18,7 @@ import (
 
 	"github.com/gorilla/mux"
 )
+import b64 "encoding/base64"
 
 var origin string
 
@@ -308,7 +309,8 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	log.Print(input.Nonce)
 	log.Print(input.Filename)
 	log.Print(input.Sig)
-	imgBytes := []byte(input.Img)
+	log.Print(input.Img)
+	imgBytes, _ := b64.StdEncoding.DecodeString(input.Img)
 	h.Sum(imgBytes)
 	checksum := h.Sum(nil)
 
