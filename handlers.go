@@ -138,6 +138,7 @@ func PostCreate(w http.ResponseWriter, r *http.Request) {
 		Markdown: input.Markdown,
 		Visible:  true,
 		Date:     time.Now(),
+		Updated:  time.Now(),
 	}
 
 	p := RepoCreatePost(post)

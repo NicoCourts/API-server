@@ -14,6 +14,7 @@ type Post struct {
 	Date     time.Time `json:"date"`
 	Body     string    `json:"body"`
 	Markdown string    `json:"markdown"`
+	Updated  time.Time `json:"updated"`
 }
 
 // Posts is just an array of posts

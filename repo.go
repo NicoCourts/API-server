@@ -19,9 +19,34 @@ import (
 var currentID int
 
 func init() {
-	//Code for providing test data
-	//RepoCreateRSVP("ABCD", "Sparx & Coco", 2)
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
 
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux)
+	c := <-ch1
+
+	// Delete all posts
+	c.RemoveAll(bson.M{})
+
+	// Create channel and mutex
+	ch2 := make(chan *mgo.Collection)
+	var mux2 sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux2.Lock()
+	defer mux2.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux, "images")
+	d := <-ch2
+
+	d.RemoveAll(bson.M{})
 }
 
 // RepoCreatePost adds a new post to our data store.
@@ -84,6 +109,7 @@ func RepoUpdatePost(postID string, post Input) error {
 			"body":     post.Body,
 			"markdown": post.Markdown,
 			"title":    post.Title,
+			"updated":  time.Now(),
 		}}); err != nil {
 		log.Print("Could not update post")
 		return err
