@@ -310,7 +310,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	h.Sum(imgBytes)
 	checksum := h.Sum(nil)
 
-	name := hex.EncodeToString(checksum) + filepath.Ext(input.filename)
+	name := hex.EncodeToString(checksum) + filepath.Ext(input.Filename)
 	log.Print("Name: " + name)
 
 	// Write the file to disk
@@ -324,7 +324,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 	f.Write(imgBytes)
 
-	image := RepoAddImage(hex.EncodeToString(checksum), filepath.Ext(input.filename), (input.filename)[0:len(input.filename)-len(filepath.Ext(input.filename))])
+	image := RepoAddImage(hex.EncodeToString(checksum), filepath.Ext(input.Filename), (input.Filename)[0:len(input.Filename)-len(filepath.Ext(input.Filename))])
 	err = json.NewEncoder(w).Encode(image)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
