@@ -288,8 +288,8 @@ func databaseHelper(c1 chan *mgo.Collection, mux *sync.Mutex, table ...string) {
 	}
 
 	//Set up DB connection
-	s := "mongodb:27017" //prod
-	//s := "localhost:27017" //dev
+	//s := "mongodb:27017" //prod
+	s := "localhost:27017" //dev
 
 	session, err := mgo.Dial(s)
 	if err != nil {

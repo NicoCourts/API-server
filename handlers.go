@@ -8,8 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"mime"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -213,12 +211,11 @@ func PostToggle(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
 		}
-	} else {
-		// Responsibly declare our content type
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.WriteHeader(http.StatusAccepted)
 	}
+	// Responsibly declare our content type
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.WriteHeader(http.StatusOK)
 }
 
 // ImageDelete deletes the post with the given ID
@@ -260,34 +257,45 @@ func ImageDelete(w http.ResponseWriter, r *http.Request) {
 // UploadImage takes in some multipart form info representing an image
 //	and returns metadata for the resource if the upload is successful.
 func UploadImage(w http.ResponseWriter, r *http.Request) {
-	_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	/*_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
 		log.Print("Can't read media headers")
 		log.Print(err)
 		return
-	}
+	}*/
 	// Don't allow people to flood our API with data
-	rdr := multipart.NewReader(r.Body, params["boundary"])
-	form, err := rdr.ReadForm(50000000)
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 5000000))
 	if err != nil {
-		panic(err)
+		log.Print(err)
+		log.Print("Error parsing input")
+		return
 	}
 
-	img := form.Value["img"][0]
-	filename := form.Value["Filename"][0]
-	Sig := form.Value["Sig"][0]
-	Nonce := form.Value["Nonce"][0]
-
-	type Nothing struct{}
-	type SignNothing struct {
-		Payload interface{}
+	type ImageUpload struct {
+		img      string
+		filename string
+		Sig      string
+		Nonce    string
+	}
+	var input ImageUpload
+	if err := json.Unmarshal(body, &input); err != nil {
+		log.Print("Error unmarshalling image")
+		log.Print(err)
+		return
+	}
+	// Create new blob omitting the image data (since we are not signing it)
+	blob, _ := json.Marshal(struct {
+		Payload string
 		Sig     string
 		Nonce   string
-	}
-	var nada Nothing
-	stuff := SignNothing{nil, Sig, Nonce}
-	blob, _ := json.Marshal(stuff)
+	}{
+		"",
+		input.Sig,
+		input.Nonce,
+	})
 
+	type Nothing struct{}
+	var nada Nothing
 	if err := Verify(blob, &nada); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		log.Print("Unauthorized Access Attempt")
@@ -297,11 +305,11 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	// Get new filename
 	h := md5.New()
-	imgBytes := []byte(img)
+	imgBytes := []byte(input.img)
 	h.Sum(imgBytes)
 	checksum := h.Sum(nil)
 
-	name := hex.EncodeToString(checksum) + filepath.Ext(filename)
+	name := hex.EncodeToString(checksum) + filepath.Ext(input.filename)
 	log.Print("Name: " + name)
 
 	// Write the file to disk
@@ -315,7 +323,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 	f.Write(imgBytes)
 
-	image := RepoAddImage(hex.EncodeToString(checksum), filepath.Ext(filename), (filename)[0:len(filename)-len(filepath.Ext(filename))])
+	image := RepoAddImage(hex.EncodeToString(checksum), filepath.Ext(input.filename), (input.filename)[0:len(input.filename)-len(filepath.Ext(input.filename))])
 	err = json.NewEncoder(w).Encode(image)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
