@@ -273,7 +273,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	type ImageUpload struct {
 		img      string
-		filename string
+		Filename string
 		Sig      string
 		Nonce    string
 	}
@@ -305,6 +305,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	// Get new filename
 	h := md5.New()
+	log.Print(input)
 	imgBytes := []byte(input.img)
 	h.Sum(imgBytes)
 	checksum := h.Sum(nil)
