@@ -264,7 +264,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}*/
 	// Don't allow people to flood our API with data
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 5000000))
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 10000000))
 	if err != nil {
 		log.Print(err)
 		log.Print("Error parsing input")
@@ -305,7 +305,9 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	// Get new filename
 	h := md5.New()
-	log.Print(input)
+	log.Print(input.Nonce)
+	log.Print(input.Filename)
+	log.Print(input.Sig)
 	imgBytes := []byte(input.Img)
 	h.Sum(imgBytes)
 	checksum := h.Sum(nil)

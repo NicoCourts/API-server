@@ -76,7 +76,7 @@ func Verify(signed []byte, container interface{}) error {
 		//}
 
 		if string(payload) != string(data.Payload) {
-			if err := json.Unmarshal(data.Payload, container); err != nil {
+			if err := json.Unmarshal(data.Payload, &container); err != nil {
 				log.Print(err)
 				return errors.New("couldn't parse payload")
 			}
