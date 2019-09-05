@@ -43,7 +43,7 @@ func init() {
 	defer mux2.Unlock()
 
 	// Open the connection and catch the incoming pointer
-	go databaseHelper(ch1, &mux, "images")
+	go databaseHelper(ch1, &mux2, "images")
 	d := <-ch2
 
 	d.RemoveAll(bson.M{})
