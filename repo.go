@@ -19,34 +19,7 @@ import (
 var currentID int
 
 func init() {
-	// Create channel and mutex
-	ch1 := make(chan *mgo.Collection)
-	var mux sync.Mutex
-
-	// Prepare mutex to hold connection open until we're done with it.
-	mux.Lock()
-	defer mux.Unlock()
-
-	// Open the connection and catch the incoming pointer
-	go databaseHelper(ch1, &mux)
-	c := <-ch1
-
-	// Delete all posts
-	c.RemoveAll(bson.M{})
-
-	// Create channel and mutex
-	ch2 := make(chan *mgo.Collection)
-	var mux2 sync.Mutex
-
-	// Prepare mutex to hold connection open until we're done with it.
-	mux2.Lock()
-	defer mux2.Unlock()
-
-	// Open the connection and catch the incoming pointer
-	go databaseHelper(ch1, &mux2, "images")
-	d := <-ch2
-
-	d.RemoveAll(bson.M{})
+	// Mess with the DB here
 }
 
 // RepoCreatePost adds a new post to our data store.
