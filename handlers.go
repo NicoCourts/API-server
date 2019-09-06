@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/feeds"
 	"github.com/gorilla/mux"
 )
 import b64 "encoding/base64"
@@ -452,6 +453,41 @@ func UpdateRSVP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		log.Print("Oh no.")
 	}
+}
+
+// GetRSSFeed parses the current (visible) post list as an RSS feed for syndication.
+func GetRSSFeed(w http.ResponseWriter, r *http.Request) {
+	feed := &feeds.Feed{
+		Title:       "NicoCourts.com blog",
+		Link:        &feeds.Link{Href: "https://nicocourts.com/blog"},
+		Description: "math, life, nature, etc",
+		Author:      &feeds.Author{Name: "Nico Courts", Email: "ncourts@uw.edu"},
+		Created:     time.Now(),
+	}
+	feed.Items = []*feeds.Item{}
+	posts := RepoGetVisiblePosts()
+	for _, post := range posts {
+		newItem := &feeds.Item{
+			Title:   post.Title,
+			Link:    &feeds.Link{Href: "https://nicocourts.com/blog/" + post.URLTitle},
+			Created: post.Updated,
+			Content: post.Body,
+		}
+		feed.Items = append(feed.Items, newItem)
+	}
+	rss, err := feed.ToRss()
+	if err != nil {
+		log.Print(err)
+		log.Print("Problem creating the RSS feed")
+	}
+
+	// Responsibly declare our content type
+	w.Header().Set("Content-Type", "application/rss+xml; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.WriteHeader(http.StatusOK)
+
+	// Write feed
+	fmt.Fprint(w, rss)
 }
 
 /*// CreateRSVP creates one!

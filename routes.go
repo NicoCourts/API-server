@@ -89,6 +89,12 @@ var routes = Routes{
 		"/image/{filename}",
 		ImageDelete,
 	},
+	Route{
+		"RSSFeed",
+		"GET",
+		"/rss/",
+		GetRSSFeed,
+	},
 	/*Route{
 		"RsvpCreate",
 		"POST",
