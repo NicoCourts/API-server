@@ -281,9 +281,7 @@ func ImageDelete(w http.ResponseWriter, r *http.Request) {
 //	and returns metadata for the resource if the upload is successful.
 func UploadImage(w http.ResponseWriter, r *http.Request) {
 	// Don't allow people to flood our API with data
-	// This is causing me problems.
-	//body, err := ioutil.ReadAll(io.LimitReader(r.Body, 10000000))
-	body, err := ioutil.ReadAll(io.Reader(r.Body))
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 10000000))
 	if err != nil {
 		log.Print(err)
 		log.Print("Error parsing input")
