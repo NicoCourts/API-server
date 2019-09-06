@@ -235,6 +235,43 @@ func RepoAddImage(filename string, extension string, shortname string) Image {
 	return img
 }
 
+// RepoDeleteImage removes an image from the dastabase.
+func RepoDeleteImage(dateStr string) error {
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux, "images")
+	c := <-ch1
+
+	err := c.Remove(bson.M{"date": dateStr})
+	return err
+}
+
+// RepoGetImage gets a single image from its dateString
+func RepoGetImage(dateStr string) (Image, error) {
+	// Create channel and mutex
+	ch1 := make(chan *mgo.Collection)
+	var mux sync.Mutex
+
+	// Prepare mutex to hold connection open until we're done with it.
+	mux.Lock()
+	defer mux.Unlock()
+
+	// Open the connection and catch the incoming pointer
+	go databaseHelper(ch1, &mux, "images")
+	c := <-ch1
+
+	img := Image{}
+	err := c.Find(bson.M{"date": dateStr}).One(&img)
+	return img, err
+}
+
 // RepoGetImageList returns a list of all available images with urls and friendly names
 func RepoGetImageList() Images {
 	// Create channel and mutex
@@ -360,45 +397,6 @@ func RepoGetRSVP(rescode string) Rsvp {
 
 	return rsvp
 }
-
-/*// RepoCreateRSVP adds a new RSVP to our data store.
-func RepoCreateRSVP(rescode string, name string, inv int) Rsvp {
-	// Create channel and mutex
-	ch1 := make(chan *mgo.Collection)
-	var mux sync.Mutex
-
-	// Prepare mutex to hold connection open until we're done with it.
-	mux.Lock()
-	defer mux.Unlock()
-
-	// Open the connection and catch the incoming pointer
-	go databaseHelperRSVP(ch1, &mux)
-	c := <-ch1
-
-	// Insert a "random" ID
-	h := xxhash.New32()
-	h.Write([]byte(name))
-	h.Write([]byte(time.Now().String()))
-
-	// Create rsvp
-	rsvp := Rsvp{
-		ID:         h.Sum32(),
-		Name:       name,
-		ShortCode:  rescode,
-		Attending:  false,
-		NumInvited: inv,
-		MonConfirm: 0,
-		SunConfirm: 0,
-	}
-
-	// Insert rsvp
-	err := c.Insert(rsvp)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return rsvp
-}*/
 
 // RepoUpdateRSVP updates an RSVP
 func RepoUpdateRSVP(rescode string, attending string, mon int, sun int) error {

@@ -234,7 +234,7 @@ func ImageDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type PicData struct {
-		Filename string
+		dateString string
 	}
 	var data PicData
 	if err := Verify(body, &data); err != nil {
@@ -243,10 +243,30 @@ func ImageDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get the data to work with
+	// Responsibly declare our content type
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.WriteHeader(http.StatusOK)
+
+	img, err := RepoGetImage(data.dateString)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Print(err)
+		return
+	}
+
 	// Everything is kosher -- delete the file.
 	//f err := os.Remove("/etc/img/" + filename); err != nil {
-	if err := os.Remove("/home/nico/" + data.Filename); err != nil {
+	if err := os.Remove("/home/omfg_lag/img/" + img.Filename); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		log.Print(err)
+		return
+	}
+
+	//Also remove the entry in the DB
+	if err := RepoDeleteImage(data.dateString); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err)
 		return
 	}
@@ -260,14 +280,10 @@ func ImageDelete(w http.ResponseWriter, r *http.Request) {
 // UploadImage takes in some multipart form info representing an image
 //	and returns metadata for the resource if the upload is successful.
 func UploadImage(w http.ResponseWriter, r *http.Request) {
-	/*_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
-	if err != nil {
-		log.Print("Can't read media headers")
-		log.Print(err)
-		return
-	}*/
 	// Don't allow people to flood our API with data
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 10000000))
+	// This is causing me problems.
+	//body, err := ioutil.ReadAll(io.LimitReader(r.Body, 10000000))
+	body, err := ioutil.ReadAll(io.Reader(r.Body))
 	if err != nil {
 		log.Print(err)
 		log.Print("Error parsing input")
@@ -490,42 +506,7 @@ func GetRSSFeed(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, rss)
 }
 
-/*// CreateRSVP creates one!
-func CreateRSVP(w http.ResponseWriter, r *http.Request) {
-	// Get POST variables
-	if err := r.ParseForm(); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		log.Print(err)
-		return
-	}
-	name := r.FormValue("name")
-	numinvited := r.FormValue("numinvited")
-	rescode := r.FormValue("rescode")
-
-	inv, err := strconv.Atoi(numinvited)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		log.Print("Couldn't convert numinvited")
-		log.Print(err)
-		return
-	}
-
-	rsvp := RepoCreateRSVP(rescode, name, inv)
-	if (rsvp != Rsvp{}) {
-		// Responsibly declare our content type
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		if err := json.NewEncoder(w).Encode(rsvp); err != nil {
-			panic("Error with JSON encoding")
-		}
-
-		w.WriteHeader(http.StatusOK)
-	} else {
-		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-// ListRSVP does stuff
+/*// ListRSVP does stuff
 func ListRSVP(w http.ResponseWriter, r *http.Request) {
 	// Responsibly declare our content type
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")

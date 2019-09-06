@@ -106,17 +106,17 @@ var routes = Routes{
 		"GET",
 		"/rsvp/list/",
 		ListRSVP,
-	},*/
-	Route{
-		"RsvpFetch",
-		"GET",
-		"/rsvp/{rescode}",
-		GetRSVP,
 	},
 	Route{
 		"RsvpUpdate",
 		"POST",
 		"/rsvp/{rescode}",
 		UpdateRSVP,
+	},*/
+	Route{
+		"RsvpFetch",
+		"GET",
+		"/rsvp/{rescode}",
+		GetRSVP,
 	},
 }
